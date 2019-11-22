@@ -129,19 +129,19 @@ x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
-train_data_multi = np.array([[x_train_multi], [y_train_multi]])
-val_data_multi = np.array([[x_val_multi], [y_val_multi]])
+# train_data_multi = np.array([[x_train_multi], [y_train_multi]])
+# val_data_multi = np.array([[x_val_multi], [y_val_multi]])
 
 #Turns datasets into tf.data.Datasets ready for tensorflow
-# train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_multi))
-# #Shuffles and batches training data
-# train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
-#
-# val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
-# #Batches testing data
-# val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
+train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_multi))
+#Shuffles and batches training data
+train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 
-train_data_multi = (x_train_multi, y_train_multi)
+val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
+#Batches testing data
+val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
+
+
 #Defines plotting for multistep prediction
 def multi_step_plot(history, true_future, prediction):
   plt.figure(figsize=(12, 6))
