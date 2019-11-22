@@ -19,7 +19,9 @@ mpl.rcParams['axes.grid'] = False
 vod = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(2010, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-
+length = vod.index
+length = len(length)
+print('LENGTH OF TOTAL DATA SET IS {}'.format(length))
 short_window = 41
 long_window = 101
 
@@ -86,8 +88,8 @@ EVALUATION_INTERVAL = 200 #???
 EPOCHS = 1 #No. of times model trains over full data set
 
  #Splits up the testing and training data
-past_history = 50 #periods fed into prediction for testing
-future_target = 10 #periods predicted for testing
+past_history = 90 #periods fed into prediction for testing
+future_target = 30 #periods predicted for testing
 STEP = 1 #How many periods it samples over
 
 
@@ -133,9 +135,15 @@ train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_mu
 #Shuffles and batches training data
 train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 
+# print(x_val_multi)
+# print(y_val_multi)
+
 val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
+
 #Batches testing data
 val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
+
+
 
 #Defines plotting for multistep prediction
 def multi_step_plot(history, true_future, prediction):
@@ -154,40 +162,17 @@ def multi_step_plot(history, true_future, prediction):
 
 
 #Plots an example with no prediction
-for x, y in train_data_multi.take(1):
-  multi_step_plot(x[0], y[0], np.array([0]))
+# for x, y in train_data_multi.take(1):
+#   multi_step_plot(x[0], y[0], np.array([0]))
 
 
-#Building the model
-model = tf.keras.models.Sequential()
+#Loading the model
+model = tf.keras.models.load_model('saved_model/my_model')
 
-#Adding layers - two LSTM layers and a dense output layer
-model.add(tf.keras.layers.LSTM(32,return_sequences=True,input_shape=x_train_multi.shape[-2:]))
-#Reshaping with negative integers works out the integer required
-#e.g. [3,4,5] reshaped with [-1,10] goes to [6,10]
-model.add(tf.keras.layers.LSTM(16, activation='relu'))
-model.add(tf.keras.layers.Dense(10))  #Output has 10 as parameter as making 10 predictions
-#Compile model
 model.summary()
-model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
-
-
-#Fitting/training the model
-multi_step_history = model.fit(train_data_multi, epochs=EPOCHS,
-                                          steps_per_epoch=EVALUATION_INTERVAL,
-                                          validation_data=val_data_multi,
-                                          validation_steps=50)
-
-
-plot_train_history(multi_step_history, 'Multi-Step Training and validation loss')
-
-
-#Save model
-
-model.save('saved_model/my_model')
-
-
 #.take(x) Return elements along axis x
-#Takes 5 rows of validation data set, x is the input and y are the labels
-for x, y in val_data_multi.take(5):
+#Takes 10 rows of validation data set, x is the input and y are the labels
+for x, y in val_data_multi.take(10):
+  print(x)
+  print(y)
   multi_step_plot(x[0], y[0], model.predict(x)[0])

@@ -88,8 +88,8 @@ EVALUATION_INTERVAL = 200 #???
 EPOCHS = 1 #No. of times model trains over full data set
 
  #Splits up the testing and training data
-past_history = 50 #periods fed into prediction for testing
-future_target = 10 #periods predicted for testing
+past_history = 90 #periods fed into prediction for testing
+future_target = 30 #periods predicted for testing
 STEP = 1 #How many periods it samples over
 
 
@@ -140,6 +140,8 @@ train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZ
 
 val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
 
+
+
 #Batches testing data
 val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
 
@@ -162,15 +164,17 @@ def multi_step_plot(history, true_future, prediction):
 
 
 #Plots an example with no prediction
-for x, y in train_data_multi.take(1):
-  multi_step_plot(x[0], y[0], np.array([0]))
+# for x, y in train_data_multi.take(1):
+#   multi_step_plot(x[0], y[0], np.array([0]))
 
 
 #Loading the model
 model = tf.keras.models.load_model('saved_model/my_model')
 
-
+model.summary()
 #.take(x) Return elements along axis x
 #Takes 3 rows of validation data set, x is the input and y are the labels
 for x, y in val_data_multi.take(10):
+  # print(x.index)
+  # print(y.index)
   multi_step_plot(x[0], y[0], model.predict(x)[0])

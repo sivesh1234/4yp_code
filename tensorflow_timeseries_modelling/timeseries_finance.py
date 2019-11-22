@@ -111,10 +111,10 @@ def show_plot(plot_data, delta, title):
 #Set up base average to compare prediction to
 def baseline(history):
   return np.mean(history)
-
-show_plot([x_train_uni[0], y_train_uni[0], baseline(x_train_uni[0])], 0,
-           'Baseline Prediction Example')
-plt.show()
+#
+# show_plot([x_train_uni[0], y_train_uni[0], baseline(x_train_uni[0])], 0,
+#            'Baseline Prediction Example')
+# plt.show()
 
 
 
