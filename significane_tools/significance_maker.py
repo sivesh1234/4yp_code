@@ -47,7 +47,8 @@ df = vod
 features_considered = ['signal','Close']
 features = df[features_considered]
 features.index = df.index
-features.plot(subplots=True)
+# features.plot(subplots=True)
+# features.plot()
 dataset = features.values
 print(len(dataset))
 
@@ -143,12 +144,16 @@ val_data_multi = (x_val_multi, y_val_multi)
 # #Batches testing data
 # val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
 
-
+final_returns = []
 total_returns = 0
 plot_returns = []
+multiple_returns = []
+
 #Defines plotting for multistep prediction
+
+# Over 3000 days this makes 100 trades, one every 30 days
 def get_returns(history, true_future, prediction):
-  # plt.figure(figsize=(12, 6))
+  #This randomly decides a buy,sell,hold
   signal_choice = [-1,0,1]
   signal = random.choice(signal_choice)
 
@@ -158,11 +163,13 @@ def get_returns(history, true_future, prediction):
   end = true_future[29]
   returns = end - start
   returns = returns*signal
+  global final_returns
   global total_returns
   global plot_returns
   total_returns = total_returns + returns
-  print(total_returns)
+  # print(total_returns)
   plot_returns.append(total_returns)
+
   # plt.plot(num_in, np.array(history[:, 1]), label='History')
   # plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
   #          label='Actual Price')
@@ -171,7 +178,7 @@ def get_returns(history, true_future, prediction):
   #            label='Predicted Price')
   # plt.legend(loc='upper left')
   # plt.show()
-  return returns
+
 
 
 #Plots an example with no prediction
@@ -185,20 +192,43 @@ def get_returns(history, true_future, prediction):
 # model = tf.keras.models.load_model('saved_model/my_model')
 
 
+no_simulations = 1000
+
+for stepz in range(1,no_simulations):
 
 
-for stepz in range(10):
     for alpha in range(0,3000,30):
-    # pred = model.predict(x_val_multi)[alpha]
+
         global total_returns
         global plot_returns
+        global multiple_returns
         get_returns(x_val_multi[alpha],y_val_multi[alpha],y_val_multi[alpha])
 
-    plt.figure()
-    plt.plot(plot_returns)
-    plt.show()
+    # plt.figure()
+    # plt.plot(plot_returns)
+    # plt.show()
+    global final_returns
+    global multiple_returns
+    multiple_returns.append(plot_returns)
+    final_returns.append(total_returns)
     total_returns = 0
     plot_returns = []
+
+
+multiple_returns = np.array(multiple_returns)
+multiple_returns = np.transpose(multiple_returns)
+print(multiple_returns.shape)
+print(len(final_returns))
+final_returns = np.array(final_returns)
+print("MAX: {} MIN: {} MEAN: {} STD: {}".format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
+
+max = np.max(final_returns)
+min = np.amin(final_returns)
+mean = np.mean(final_returns)
+std = np.std(final_returns)
+plt.figure()
+plt.plot(multiple_returns)
+plt.show()
 
 # plt.figure()
 # plt.plot(y_val_multi, label='true')
