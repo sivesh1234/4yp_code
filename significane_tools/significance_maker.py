@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
-
+import random
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,10 +49,11 @@ features = df[features_considered]
 features.index = df.index
 features.plot(subplots=True)
 dataset = features.values
+print(len(dataset))
 
-data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
-data_std = dataset[:TRAIN_SPLIT].std(axis=0)
-dataset = (dataset-data_mean)/data_std
+# data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
+# data_std = dataset[:TRAIN_SPLIT].std(axis=0)
+# dataset = (dataset-data_mean)/data_std
 
 
 #Creates a data set with associated labels. Takes index for these data sets as inputs
@@ -121,6 +122,7 @@ def create_time_steps(length):
 
 
  #Returns training data set = x and labels = y
+ #dataset can be multivariate but target has to be univariate
 x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
@@ -142,22 +144,34 @@ val_data_multi = (x_val_multi, y_val_multi)
 # val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
 
 
-
-
+total_returns = 0
+plot_returns = []
 #Defines plotting for multistep prediction
-def multi_step_plot(history, true_future, prediction):
-  plt.figure(figsize=(12, 6))
+def get_returns(history, true_future, prediction):
+  # plt.figure(figsize=(12, 6))
+  signal_choice = [-1,0,1]
+  signal = random.choice(signal_choice)
+
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
-
-  plt.plot(num_in, np.array(history[:, 1]), label='History')
-  plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
-           label='Actual Price')
-  if prediction.any():
-    plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
-             label='Predicted Price')
-  plt.legend(loc='upper left')
-  plt.show()
+  start = history[89][1]
+  end = true_future[29]
+  returns = end - start
+  returns = returns*signal
+  global total_returns
+  global plot_returns
+  total_returns = total_returns + returns
+  print(total_returns)
+  plot_returns.append(total_returns)
+  # plt.plot(num_in, np.array(history[:, 1]), label='History')
+  # plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
+  #          label='Actual Price')
+  # if prediction.any():
+  #   plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
+  #            label='Predicted Price')
+  # plt.legend(loc='upper left')
+  # plt.show()
+  return returns
 
 
 #Plots an example with no prediction
@@ -168,15 +182,23 @@ def multi_step_plot(history, true_future, prediction):
 
 
 
-model = tf.keras.models.load_model('saved_model/my_model')
+# model = tf.keras.models.load_model('saved_model/my_model')
 
 
 
 
+for stepz in range(10):
+    for alpha in range(0,3000,30):
+    # pred = model.predict(x_val_multi)[alpha]
+        global total_returns
+        global plot_returns
+        get_returns(x_val_multi[alpha],y_val_multi[alpha],y_val_multi[alpha])
 
-for alpha in range(0,900,30):
-    pred = model.predict(x_val_multi)[alpha]
-    multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
+    plt.figure()
+    plt.plot(plot_returns)
+    plt.show()
+    total_returns = 0
+    plot_returns = []
 
 # plt.figure()
 # plt.plot(y_val_multi, label='true')

@@ -37,8 +37,8 @@ fig = plt.figure()
 yaxis = fig.add_subplot(111,ylabel='Price')
 vod['Close'].plot(ax=yaxis,color='r')
 signals[['short_mavg','long_mavg']].plot(ax=yaxis)
-yaxis.plot(signals.loc[signals.positions == 1.0].index, signals.short_mavg[signals.positions == 1.0],'^', markersize=10, color='m')
-yaxis.plot(signals.loc[signals.positions == -1.0].index, signals.short_mavg[signals.positions == -1.0], 'v', markersize=10, color='k')
+yaxis.plot(signals.loc[signals.positions == 1.0].index, signals.short_mavg[signals.positions == 1.0],'^', markersize=10, color='b')
+yaxis.plot(signals.loc[signals.positions == -1.0].index, signals.short_mavg[signals.positions == -1.0], 'v', markersize=10, color='r')
 
 #Backtesting the strategy
 initial_capital = float(0.0)
@@ -67,10 +67,10 @@ ax1 = fig.add_subplot(111, ylabel='PnL (%)')
 portfolio['total'].plot(ax=ax1, lw=2.)
 ax1.plot(portfolio.loc[signals.positions == 1.0].index,
          portfolio.total[signals.positions == 1.0],
-         '^', markersize=10, color='m')
+         '^', markersize=10, color='b')
 ax1.plot(portfolio.loc[signals.positions == -1.0].index,
          portfolio.total[signals.positions == -1.0],
-         'v', markersize=10, color='k')
+         'v', markersize=10, color='r')
 fig2 = plt.figure()
 
 vod['Close'].plot(grid=True)

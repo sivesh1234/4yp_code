@@ -129,17 +129,19 @@ x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
-# train_data_multi = np.array([[x_train_multi], [y_train_multi]])
-# val_data_multi = np.array([[x_val_multi], [y_val_multi]])
+train_data_multi = (x_train_multi, y_train_multi)
+val_data_multi = (x_val_multi, y_val_multi)
 
 #Turns datasets into tf.data.Datasets ready for tensorflow
-train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_multi))
-#Shuffles and batches training data
-train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
+# train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_multi))
+# #Shuffles and batches training data
+# train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
+#
+# val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
+# #Batches testing data
+# val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
 
-val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
-#Batches testing data
-val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
+
 
 
 #Defines plotting for multistep prediction
@@ -159,8 +161,8 @@ def multi_step_plot(history, true_future, prediction):
 
 
 #Plots an example with no prediction
-for x, y in train_data_multi.take(1):
-  multi_step_plot(x[0], y[0], np.array([0]))
+# for x, y in train_data_multi.take(1):
+#   multi_step_plot(x[0], y[0], np.array([0]))
 
 
 #Building the model
@@ -182,17 +184,17 @@ model.summary()
 model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
 
 #Fitting/training the model
-multi_step_history = model.fit(train_data_multi, epochs=EPOCHS,
-                                         steps_per_epoch=EVALUATION_INTERVAL,
-                                         validation_data=val_data_multi,
-                                         validation_steps=50)
+# multi_step_history = model.fit(train_data_multi, epochs=EPOCHS,
+#                                          steps_per_epoch=EVALUATION_INTERVAL,
+#                                          validation_data=val_data_multi,
+#                                          validation_steps=50)
 
 
 
 #New fitting step
-# multi_step_history = model.fit(x_train_multi, y_train_multi,
-#                     validation_data=(x_val_multi, y_val_multi),
-#                     epochs=1, batch_size=64, verbose=1)
+multi_step_history = model.fit(x_train_multi, y_train_multi,
+                    validation_data=(x_val_multi, y_val_multi),
+                    epochs=3, batch_size=64, verbose=1)
 
 plot_train_history(multi_step_history, 'Multi-Step Training and validation loss')
 
@@ -201,9 +203,9 @@ plot_train_history(multi_step_history, 'Multi-Step Training and validation loss'
 
 model.save('saved_model/my_model')
 
-
-pred = model.predict(x_val_multi)[0]
-multi_step_plot(x_val_multi[0],y_val_multi[0],pred)
+for alpha in range(0,1000,250):
+    pred = model.predict(x_val_multi)[alpha]
+    multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 
 # plt.figure()
 # plt.plot(y_val_multi, label='true')
@@ -213,5 +215,5 @@ multi_step_plot(x_val_multi[0],y_val_multi[0],pred)
 
 #.take(x) Return elements along axis x
 #Takes 5 rows of validation data set, x is the input and y are the labels
-for x, y in val_data_multi.take(5):
-  multi_step_plot(x[0], y[0], model.predict(x)[0])
+# for x, y in val_data_multi.take(5):
+#   multi_step_plot(x[0], y[0], model.predict(x)[0])
