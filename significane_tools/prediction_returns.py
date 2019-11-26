@@ -152,7 +152,7 @@ multiple_returns = []
 #Defines plotting for multistep prediction
 
 # Over 3000 days this makes 100 trades, one every 30 days
-def max_returns(history, true_future, prediction):
+def predicted_returns(history, true_future, prediction):
   #This randomly decides a buy,sell,hold
   signal_choice = [-1,0,1]
   signal = random.choice(signal_choice)
@@ -160,8 +160,12 @@ def max_returns(history, true_future, prediction):
   num_out = len(true_future)
   start = history[89][1]
   end = true_future[29]
+  start_pred = prediction[0]
+  difference = start - start_pred
+  prediction = prediction + difference
+  predicted_end = prediction[29]
   #This sets the signal to the best option
-  if end > start:
+  if predicted_end > start:
       signal = 1
   else:
       signal = -1
@@ -171,10 +175,26 @@ def max_returns(history, true_future, prediction):
   global total_returns
   global plot_returns
   total_returns = total_returns + returns
+  print(total_returns)
   # print(total_returns)
   plot_returns.append(total_returns)
 
-
+def multi_step_plot(history, true_future, prediction):
+  plt.figure(figsize=(12, 6))
+  num_in = create_time_steps(len(history))
+  num_out = len(true_future)
+  start = history[89][1]
+  start_pred = prediction[0]
+  difference = start - start_pred
+  prediction = prediction + difference
+  plt.plot(num_in, np.array(history[:, 1]), label='History')
+  plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
+           label='True Future')
+  if prediction.any():
+    plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
+             label='Predicted Future')
+  plt.legend(loc='upper left')
+  plt.show()
 
 
 
@@ -186,24 +206,27 @@ def max_returns(history, true_future, prediction):
 
 
 
-# model = tf.keras.models.load_model('saved_model/my_model')
 
+model = tf.keras.models.load_model('saved_model/my_model')
 
 
 for alpha in range(0,3000,30):
-
+    pred = model.predict(x_val_multi)[alpha]
     global total_returns
     global plot_returns
     global multiple_returns
-    max_returns(x_val_multi[alpha],y_val_multi[alpha],y_val_multi[alpha])
-
+    predicted_returns(x_val_multi[alpha],y_val_multi[alpha],pred)
+    # multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 plt.figure()
-plt.plot(plot_returns)
-plt.title('Maximum PnL possible over 100 trades (one ever 30 days)')
+plt.title('PnL using RNN predictions over 100 trades (one ever 30 days)')
 plt.xlabel('Trades')
 plt.ylabel('PnL / sterling')
+plt.plot(plot_returns)
 plt.figure()
+plt.title('Vodafone share price over 3000 days')
 plt.plot(x_val_multi[:,1][0:3000,1])
+plt.xlabel('Days')
+plt.ylabel('Price / sterling')
 plt.show()
 
 

@@ -220,13 +220,17 @@ multiple_returns = np.transpose(multiple_returns)
 print(multiple_returns.shape)
 print(len(final_returns))
 final_returns = np.array(final_returns)
-print("MAX: {} MIN: {} MEAN: {} STD: {}".format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
+# print("MAX: {} MIN: {} MEAN: {} STD: {}".format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
 
 max = np.max(final_returns)
 min = np.amin(final_returns)
 mean = np.mean(final_returns)
 std = np.std(final_returns)
 plt.figure()
+
+plt.title('Monte-Carlo returns: MAX: {} MIN: {} MEAN: {} STD: {}'.format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
+plt.xlabel('Trades')
+plt.ylabel('PnL / sterling')
 plt.plot(multiple_returns)
 plt.show()
 

@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
-import random
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,10 +47,8 @@ df = vod
 features_considered = ['signal','Close']
 features = df[features_considered]
 features.index = df.index
-# features.plot(subplots=True)
-# features.plot()
+features.plot(subplots=True)
 dataset = features.values
-print(len(dataset))
 
 # data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
 # data_std = dataset[:TRAIN_SPLIT].std(axis=0)
@@ -123,7 +121,6 @@ def create_time_steps(length):
 
 
  #Returns training data set = x and labels = y
- #dataset can be multivariate but target has to be univariate
 x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
@@ -144,38 +141,26 @@ val_data_multi = (x_val_multi, y_val_multi)
 # #Batches testing data
 # val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
 
-final_returns = []
-total_returns = 0
-plot_returns = []
-multiple_returns = []
+
+
 
 #Defines plotting for multistep prediction
-
-# Over 3000 days this makes 100 trades, one every 30 days
-def max_returns(history, true_future, prediction):
-  #This randomly decides a buy,sell,hold
-  signal_choice = [-1,0,1]
-  signal = random.choice(signal_choice)
+def multi_step_plot(history, true_future, prediction):
+  plt.figure(figsize=(12, 6))
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
   start = history[89][1]
-  end = true_future[29]
-  #This sets the signal to the best option
-  if end > start:
-      signal = 1
-  else:
-      signal = -1
-  returns = end - start
-  returns = returns*signal
-  global final_returns
-  global total_returns
-  global plot_returns
-  total_returns = total_returns + returns
-  # print(total_returns)
-  plot_returns.append(total_returns)
-
-
-
+  start_pred = prediction[0]
+  difference = start - start_pred
+  prediction = prediction + difference
+  plt.plot(num_in, np.array(history[:, 1]), label='History')
+  plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
+           label='True Future')
+  if prediction.any():
+    plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
+             label='Predicted Future')
+  plt.legend(loc='upper left')
+  plt.show()
 
 
 #Plots an example with no prediction
@@ -184,33 +169,13 @@ def max_returns(history, true_future, prediction):
 
 
 
+#Save model
 
+model = tf.keras.models.load_model('saved_model/my_model')
 
-# model = tf.keras.models.load_model('saved_model/my_model')
-
-
-
-for alpha in range(0,3000,30):
-
-    global total_returns
-    global plot_returns
-    global multiple_returns
-    max_returns(x_val_multi[alpha],y_val_multi[alpha],y_val_multi[alpha])
-
-plt.figure()
-plt.plot(plot_returns)
-plt.title('Maximum PnL possible over 100 trades (one ever 30 days)')
-plt.xlabel('Trades')
-plt.ylabel('PnL / sterling')
-plt.figure()
-plt.plot(x_val_multi[:,1][0:3000,1])
-plt.show()
-
-
-
-
-
-
+for alpha in range(0,1000,250):
+    pred = model.predict(x_val_multi)[alpha]
+    multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 
 # plt.figure()
 # plt.plot(y_val_multi, label='true')
