@@ -12,9 +12,10 @@ ticker = ""
 
 np.set_printoptions(threshold=np.inf)
 vod = pdr.get_data_yahoo('VOD',
-                          start=datetime.datetime(2012, 10, 26),
-                          end=datetime.datetime(2019, 10, 26)) #year, month, date
-
+                          start=datetime.datetime(2000, 5, 26),
+                          end=datetime.datetime(2019, 10, 26))
+                          #year, month, date
+vod = vod.tail(3300)
 short_window = 41
 long_window = 101
 
@@ -24,8 +25,8 @@ signals['short_mavg'] = vod['Close'].rolling(window=short_window,
                                               min_periods=1,center=False).mean()
 
 signals['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
-signals['short_mavg'] = signals['short_mavg'].shift(periods=(-50))
-signals['long_mavg'] = signals['long_mavg'].shift(periods=(-50))
+# signals['short_mavg'] = signals['short_mavg'].shift(periods=(-50))
+# signals['long_mavg'] = signals['long_mavg'].shift(periods=(-50))
 
 #if short > long then 'signal' = 1
 #unsure what short_window does here***************
@@ -54,16 +55,17 @@ portfolio['cash'] = initial_capital - (pos_diff.multiply(vod['Adj Close'], axis=
 # Add `total` to portfolio
 open_price = vod['Close'][0]
 
-portfolio['total'] = ((portfolio['cash'] + portfolio['holdings'])/open_price)*100
+portfolio['total'] = ((portfolio['cash'] + portfolio['holdings']))
 
 # Add `returns` to portfolio
+
 portfolio['returns'] = portfolio['total'].pct_change()
 fig = plt.figure()
 
 
 
 # Plot the portfolio curve
-ax1 = fig.add_subplot(111, ylabel='PnL (%)')
+ax1 = fig.add_subplot(111, ylabel='PnL ')
 portfolio['total'].plot(ax=ax1, lw=2.)
 ax1.plot(portfolio.loc[signals.positions == 1.0].index,
          portfolio.total[signals.positions == 1.0],

@@ -173,7 +173,7 @@ def multi_step_plot(history, true_future, prediction):
 
 model = tf.keras.models.load_model('saved_model/my_model')
 
-for alpha in range(0,1000,250):
+for alpha in range(0,1000,200):
     pred = model.predict(x_val_multi)[alpha]
     multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 
