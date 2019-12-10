@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
-import random
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,40 +17,38 @@ mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
 vod = pdr.get_data_yahoo('VOD',
-                          start=datetime.datetime(2000, 10, 26),
+                          start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
 short_window = 41
 long_window = 101
 
 #gives signals the same index (dates) as vod
-vod['signal'] = 0.0
-vod['short_mavg'] = vod['Close'].rolling(window=short_window,
-                                              min_periods=1,center=False).mean()
-
-vod['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
-vod['short_mavg'] = vod['short_mavg'].shift(periods=(-50))
-vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
-
-#if short > long then 'signal' = 1
-
-vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['long_mavg'][short_window:], 1.0, 0.0)
-
-
+# vod['signal'] = 0.0
+# vod['short_mavg'] = vod['Close'].rolling(window=short_window,
+#                                               min_periods=1,center=False).mean()
+#
+# vod['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
+# vod['short_mavg'] = vod['short_mavg'].shift(periods=(-50))
+# vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
+#
+# #if short > long then 'signal' = 1
+#
+# vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['long_mavg'][short_window:], 1.0, 0.0)
 
 
-TRAIN_SPLIT = 1500
+
+
+TRAIN_SPLIT = 4000
 
 
 df = vod
 
-features_considered = ['signal','Close']
+features_considered = ['Close']
 features = df[features_considered]
 features.index = df.index
-# features.plot(subplots=True)
-# features.plot()
+features.plot(subplots=True)
 dataset = features.values
-print(len(dataset))
 
 # data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
 # data_std = dataset[:TRAIN_SPLIT].std(axis=0)
@@ -85,7 +83,7 @@ def multivariate_data(dataset, target, start_index, end_index, history_size,
 BATCH_SIZE = 100 #Batch size no. of periods fed intro training
 BUFFER_SIZE = 10000 #Buffer size greater than sample size to ensure perfect shuffle
 EVALUATION_INTERVAL = 200 #???
-EPOCHS = 3 #No. of times model trains over full data set
+EPOCHS = 5 #No. of times model trains over full data set
 
  #Splits up the testing and training data
 past_history = 90#periods fed into prediction for testing
@@ -123,12 +121,11 @@ def create_time_steps(length):
 
 
  #Returns training data set = x and labels = y
- #dataset can be multivariate but target has to be univariate
-x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
+x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 0], 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
  #Returns testing data set = x and labels = y
-x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
+x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 0],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
@@ -144,49 +141,10 @@ val_data_multi = (x_val_multi, y_val_multi)
 # #Batches testing data
 # val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
 
-final_returns = []
-total_returns = 0
-plot_returns = []
-multiple_returns = []
-all_signals = []
+
+
+
 #Defines plotting for multistep prediction
-
-# Over 3000 days this makes 100 trades, one every 30 days
-def predicted_returns(history, true_future, prediction):
-  #This randomly decides a buy,sell,hold
-
-  signal = 0
-  num_in = create_time_steps(len(history))
-  num_out = len(true_future)
-  start = history[89][1]
-  std = np.std(history[:][1])
-  end = true_future[29]
-  start_pred = prediction[0]
-  difference = start - start_pred
-  prediction = prediction + difference
-  prediction_average = np.mean(prediction)
-  predicted_end = prediction[29]
-  #This sets the signal to the best option
-  if predicted_end > start:
-      signal = 1
-      print("long")
-  elif predicted_end < start:
-      signal = -1
-      print("short")
-  else:
-      signal = 0
-  returns = end - start
-  returns = returns*signal
-  global final_returns
-  global total_returns
-  global plot_returns
-  global all_signals
-  total_returns = total_returns + returns
-  print(total_returns)
-  # print(total_returns)
-  plot_returns.append(total_returns)
-  all_signals.append(signal)
-
 def multi_step_plot(history, true_future, prediction):
   plt.figure(figsize=(12, 6))
   num_in = create_time_steps(len(history))
@@ -202,10 +160,7 @@ def multi_step_plot(history, true_future, prediction):
     plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
              label='Predicted Future')
   plt.legend(loc='upper left')
-  plt.show(block=False)
-  plt.pause(0.5)
-  plt.close()
-
+  plt.show()
 
 
 #Plots an example with no prediction
@@ -213,38 +168,47 @@ def multi_step_plot(history, true_future, prediction):
 #   multi_step_plot(x[0], y[0], np.array([0]))
 
 
+#Building the model
+model = tf.keras.models.Sequential()
+
+#Adding layers - two LSTM layers and a dense output layer
+model.add(tf.keras.layers.LSTM(64,return_sequences=True,input_shape=x_train_multi.shape[-2:]))
+#Return_sequences: whether to return the last output in output sequence or full sequence
+
+#Reshaping with negative integers works out the integer required
+#e.g. [3,4,5] reshaped with [-1,10] goes to [6,10]
+model.add(tf.keras.layers.LSTM(64, activation='relu'))
+model.add(tf.keras.layers.Dense(30))  #Output has 10 as parameter as making 10 predictions
+#Compile model
+model.summary()
+
+#RMSprop optimizer divides the gradient by a running average of its recent magnitude
+#mae is mean absolute error
+model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
+
+#Fitting/training the model
+# multi_step_history = model.fit(train_data_multi, epochs=EPOCHS,
+#                                          steps_per_epoch=EVALUATION_INTERVAL,
+#                                          validation_data=val_data_multi,
+#                                          validation_steps=50)
 
 
 
+#New fitting step
+multi_step_history = model.fit(x_train_multi, y_train_multi,
+                    validation_data=(x_val_multi, y_val_multi),
+                    epochs=6, batch_size=100, verbose=1)
 
-model = tf.keras.models.load_model('saved_model/my_model')
-
-
-for alpha in range(0,3000,30):
-    pred = model.predict(x_val_multi)[alpha]
-    global total_returns
-    global plot_returns
-    global multiple_returns
-    predicted_returns(x_val_multi[alpha],y_val_multi[alpha],pred)
-    multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
-plt.figure()
-plt.title('PnL using prediction RNN over 100 trades (one ever 30 days) and signals')
-plt.xlabel('Trades')
-plt.ylabel('PnL / sterling')
-plt.plot(plot_returns)
-plt.plot(all_signals)
-plt.figure()
-plt.title('Vodafone share price over 3000 days')
-plt.plot(x_val_multi[:,1][0:3000,1])
-plt.xlabel('Days')
-plt.ylabel('Price / sterling')
-plt.show()
+plot_train_history(multi_step_history, 'Multi-Step Training and validation loss')
 
 
+#Save model
 
+model.save('saved_model/univariate_nonnormalised_model')
 
-
-
+# for alpha in range(0,1000,250):
+#     pred = model.predict(x_val_multi)[alpha]
+#     multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 
 # plt.figure()
 # plt.plot(y_val_multi, label='true')

@@ -55,8 +55,8 @@ portfolio['cash'] = initial_capital - (pos_diff.multiply(vod['Adj Close'], axis=
 # Add `total` to portfolio
 open_price = vod['Close'][0]
 
-portfolio['total'] = ((portfolio['cash'] + portfolio['holdings']))
-
+portfolio['total'] = (((portfolio['cash'] + portfolio['holdings'])/open_price)*100)
+# portfolio['total'] = (portfolio['cash'] + portfolio['holdings'])
 # Add `returns` to portfolio
 
 portfolio['returns'] = portfolio['total'].pct_change()
@@ -65,14 +65,9 @@ fig = plt.figure()
 
 
 # Plot the portfolio curve
-ax1 = fig.add_subplot(111, ylabel='PnL ')
+ax1 = fig.add_subplot(111, ylabel='PnL %')
 portfolio['total'].plot(ax=ax1, lw=2.)
-ax1.plot(portfolio.loc[signals.positions == 1.0].index,
-         portfolio.total[signals.positions == 1.0],
-         '^', markersize=10, color='b')
-ax1.plot(portfolio.loc[signals.positions == -1.0].index,
-         portfolio.total[signals.positions == -1.0],
-         'v', markersize=10, color='r')
+
 fig2 = plt.figure()
 
 vod['Close'].plot(grid=True)

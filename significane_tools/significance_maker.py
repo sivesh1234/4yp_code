@@ -36,8 +36,8 @@ vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
 
 vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['long_mavg'][short_window:], 1.0, 0.0)
 
-
-
+last3000 = vod['Close'][-3000:]
+open_price = vod['Close'][0]
 
 TRAIN_SPLIT = 1500
 

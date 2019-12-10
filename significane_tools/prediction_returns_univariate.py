@@ -44,7 +44,7 @@ TRAIN_SPLIT = 1500
 
 df = vod
 
-features_considered = ['signal','Close']
+features_considered = ['Close']
 features = df[features_considered]
 features.index = df.index
 # features.plot(subplots=True)
@@ -124,11 +124,11 @@ def create_time_steps(length):
 
  #Returns training data set = x and labels = y
  #dataset can be multivariate but target has to be univariate
-x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
+x_train_multi, y_train_multi = multivariate_data(dataset, dataset, 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
  #Returns testing data set = x and labels = y
-x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
+x_val_multi, y_val_multi = multivariate_data(dataset, dataset,
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
@@ -158,8 +158,8 @@ def predicted_returns(history, true_future, prediction):
   signal = 0
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
-  start = history[89][1]
-  std = np.std(history[:][1])
+  start = history[89]
+  std = np.std(history[:])
   end = true_future[29]
   start_pred = prediction[0]
   difference = start - start_pred
@@ -187,15 +187,16 @@ def predicted_returns(history, true_future, prediction):
   plot_returns.append(total_returns)
   all_signals.append(signal)
 
+
 def multi_step_plot(history, true_future, prediction):
   plt.figure(figsize=(12, 6))
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
-  start = history[89][1]
+  start = history[89]
   start_pred = prediction[0]
   difference = start - start_pred
   prediction = prediction + difference
-  plt.plot(num_in, np.array(history[:, 1]), label='History')
+  plt.plot(num_in, np.array(history[:]), label='History')
   plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
            label='True Future')
   if prediction.any():
@@ -217,7 +218,7 @@ def multi_step_plot(history, true_future, prediction):
 
 
 
-model = tf.keras.models.load_model('saved_model/my_model')
+model = tf.keras.models.load_model('saved_model/univariate_nonnormalised_model')
 
 
 for alpha in range(0,3000,30):
@@ -233,12 +234,13 @@ plt.xlabel('Trades')
 plt.ylabel('PnL / sterling')
 plt.plot(plot_returns)
 plt.plot(all_signals)
-plt.figure()
-plt.title('Vodafone share price over 3000 days')
-plt.plot(x_val_multi[:,1][0:3000,1])
-plt.xlabel('Days')
-plt.ylabel('Price / sterling')
 plt.show()
+# plt.figure()
+# plt.title('Vodafone share price over 3000 days')
+# plt.plot(x_val_multi[:][0:3000])
+# plt.xlabel('Days')
+# plt.ylabel('Price / sterling')
+# plt.show()
 
 
 

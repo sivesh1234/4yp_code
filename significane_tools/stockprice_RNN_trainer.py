@@ -17,7 +17,7 @@ mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
 vod = pdr.get_data_yahoo('VOD',
-                          start=datetime.datetime(2000, 10, 26),
+                          start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
 short_window = 41
@@ -39,7 +39,7 @@ vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['
 
 
 
-TRAIN_SPLIT = 1500
+TRAIN_SPLIT = 4000
 
 
 df = vod
@@ -197,7 +197,7 @@ model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
 #New fitting step
 multi_step_history = model.fit(x_train_multi, y_train_multi,
                     validation_data=(x_val_multi, y_val_multi),
-                    epochs=10, batch_size=100, verbose=1)
+                    epochs=5, batch_size=100, verbose=1)
 
 plot_train_history(multi_step_history, 'Multi-Step Training and validation loss')
 

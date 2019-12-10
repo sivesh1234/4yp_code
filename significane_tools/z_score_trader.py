@@ -148,31 +148,25 @@ final_returns = []
 total_returns = 0
 plot_returns = []
 multiple_returns = []
-all_signals = []
+
 #Defines plotting for multistep prediction
 
 # Over 3000 days this makes 100 trades, one every 30 days
-def predicted_returns(history, true_future, prediction):
-  #This randomly decides a buy,sell,hold
+def z_returns(history, true_future, prediction):
 
-  signal = 0
+  signal_choice = 0
+
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
   start = history[89][1]
-  std = np.std(history[:][1])
   end = true_future[29]
-  start_pred = prediction[0]
-  difference = start - start_pred
-  prediction = prediction + difference
-  prediction_average = np.mean(prediction)
-  predicted_end = prediction[29]
-  #This sets the signal to the best option
-  if predicted_end > start:
+  std = np.std(history[:][1])
+  mean = np.mean(history[:][1])
+  z_score = (start-mean)/std
+  if z_score > 1:
       signal = 1
-      print("long")
-  elif predicted_end < start:
+  elif z_score < -1:
       signal = -1
-      print("short")
   else:
       signal = 0
   returns = end - start
@@ -180,31 +174,11 @@ def predicted_returns(history, true_future, prediction):
   global final_returns
   global total_returns
   global plot_returns
-  global all_signals
   total_returns = total_returns + returns
-  print(total_returns)
   # print(total_returns)
   plot_returns.append(total_returns)
-  all_signals.append(signal)
 
-def multi_step_plot(history, true_future, prediction):
-  plt.figure(figsize=(12, 6))
-  num_in = create_time_steps(len(history))
-  num_out = len(true_future)
-  start = history[89][1]
-  start_pred = prediction[0]
-  difference = start - start_pred
-  prediction = prediction + difference
-  plt.plot(num_in, np.array(history[:, 1]), label='History')
-  plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
-           label='True Future')
-  if prediction.any():
-    plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
-             label='Predicted Future')
-  plt.legend(loc='upper left')
-  plt.show(block=False)
-  plt.pause(0.5)
-  plt.close()
+
 
 
 
@@ -216,28 +190,24 @@ def multi_step_plot(history, true_future, prediction):
 
 
 
+# model = tf.keras.models.load_model('saved_model/my_model')
 
-model = tf.keras.models.load_model('saved_model/my_model')
 
 
 for alpha in range(0,3000,30):
-    pred = model.predict(x_val_multi)[alpha]
+
     global total_returns
     global plot_returns
     global multiple_returns
-    predicted_returns(x_val_multi[alpha],y_val_multi[alpha],pred)
-    multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
+    z_returns(x_val_multi[alpha],y_val_multi[alpha],y_val_multi[alpha])
+
 plt.figure()
-plt.title('PnL using prediction RNN over 100 trades (one ever 30 days) and signals')
+plt.plot(plot_returns)
+plt.title('z-score PnL possible over 100 trades (one ever 30 days)')
 plt.xlabel('Trades')
 plt.ylabel('PnL / sterling')
-plt.plot(plot_returns)
-plt.plot(all_signals)
 plt.figure()
-plt.title('Vodafone share price over 3000 days')
 plt.plot(x_val_multi[:,1][0:3000,1])
-plt.xlabel('Days')
-plt.ylabel('Price / sterling')
 plt.show()
 
 
