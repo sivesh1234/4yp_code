@@ -168,6 +168,7 @@ def predicted_returns(history, true_future, prediction):
   prediction_average = np.mean(prediction)
   predicted_end = prediction[29]
   #This sets the signal to the best option
+  print(prediction_average)
   if prediction_average > start:
       signal = 1
       print("long")

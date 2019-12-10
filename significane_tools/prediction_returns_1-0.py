@@ -61,11 +61,11 @@ print(len(dataset))
 
 #Think of it as two parallel vertical arrays, one of width history_size and one of width target_size
 
-def multivariate_data(dataset, target, start_index, end_index, history_size,
+def multivariate_data(dataset, target,  start_index, end_index, history_size,
                       target_size, step, single_step=False):
   data = []
   labels = []
-
+  full_y = []
   start_index = start_index + history_size
   if end_index is None:
     end_index = len(dataset) - target_size
@@ -78,8 +78,13 @@ def multivariate_data(dataset, target, start_index, end_index, history_size,
       labels.append(target[i+target_size])
     else:
       labels.append(target[i:i+target_size])
+    if single_step:
+      full_y.append(dataset[i+target_size])
+    else:
+      full_y.append(dataset[i:i+target_size])
 
-  return np.array(data), np.array(labels)
+
+  return np.array(data), np.array(labels), np.array(full_y)
 
 
 BATCH_SIZE = 100 #Batch size no. of periods fed intro training
@@ -124,11 +129,11 @@ def create_time_steps(length):
 
  #Returns training data set = x and labels = y
  #dataset can be multivariate but target has to be univariate
-x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
+x_train_multi, y_train_multi, x_val_all = multivariate_data(dataset, dataset[:, 0], 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
  #Returns testing data set = x and labels = y
-x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
+x_val_multi, y_val_multi, y_val_all = multivariate_data(dataset, dataset[:, 0],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
@@ -160,14 +165,18 @@ def predicted_returns(history, true_future, prediction):
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
   start = history[89][1]
+  start_10 = history[89][0]
+
   std = np.std(history[:][1])
-  end = true_future[29]
+  end = true_future[29][1]
+
   start_pred = prediction[0]
-  difference = start - start_pred
+  difference = start_10 - start_pred
   prediction = prediction + difference
   prediction_average = np.mean(prediction)
   predicted_end = prediction[29]
   #This sets the signal to the best option
+  print("predicted_average {}".format(prediction_average))
   if prediction_average > 0.5:
       signal = 1
       print("long")
@@ -192,7 +201,7 @@ def multi_step_plot(history, true_future, prediction):
   plt.figure(figsize=(12, 6))
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
-  start = history[89][1]
+  start = history[89][0]
   start_pred = prediction[0]
   difference = start - start_pred
   prediction = prediction + difference
@@ -218,7 +227,7 @@ def multi_step_plot(history, true_future, prediction):
 
 
 
-model = tf.keras.models.load_model('saved_model/my_model')
+model = tf.keras.models.load_model('saved_model/1-0_model')
 
 
 for alpha in range(0,3000,30):
@@ -226,8 +235,8 @@ for alpha in range(0,3000,30):
     global total_returns
     global plot_returns
     global multiple_returns
-    predicted_returns(x_val_multi[alpha],y_val_multi[alpha],pred)
-    # multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
+    predicted_returns(x_val_multi[alpha],y_val_all[alpha],pred)
+    # multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred)
 plt.figure()
 plt.title('PnL using prediction RNN over 100 trades (one every 30 days) and signals')
 plt.xlabel('Trades')
