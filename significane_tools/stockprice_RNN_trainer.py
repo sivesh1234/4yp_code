@@ -121,11 +121,11 @@ def create_time_steps(length):
 
 
  #Returns training data set = x and labels = y
-x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
+x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 0], 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
  #Returns testing data set = x and labels = y
-x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
+x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 0],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
@@ -149,11 +149,11 @@ def multi_step_plot(history, true_future, prediction):
   plt.figure(figsize=(12, 6))
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
-  start = history[89][1]
+  start = history[89][0]
   start_pred = prediction[0]
   difference = start - start_pred
   prediction = prediction + difference
-  plt.plot(num_in, np.array(history[:, 1]), label='History')
+  plt.plot(num_in, np.array(history[:, 0]), label='History')
   plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
            label='True Future')
   if prediction.any():
@@ -204,7 +204,7 @@ plot_train_history(multi_step_history, 'Multi-Step Training and validation loss'
 
 #Save model
 
-model.save('saved_model/my_model')
+model.save('saved_model/1-0_model')
 
 for alpha in range(0,1000,250):
     pred = model.predict(x_val_multi)[alpha]

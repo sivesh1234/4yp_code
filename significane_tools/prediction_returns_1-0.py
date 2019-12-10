@@ -168,10 +168,10 @@ def predicted_returns(history, true_future, prediction):
   prediction_average = np.mean(prediction)
   predicted_end = prediction[29]
   #This sets the signal to the best option
-  if prediction_average > start:
+  if prediction_average > 0.5:
       signal = 1
       print("long")
-  elif prediction_average < start:
+  elif prediction_average < 0.5:
       signal = -1
       print("short")
   else:
@@ -196,7 +196,7 @@ def multi_step_plot(history, true_future, prediction):
   start_pred = prediction[0]
   difference = start - start_pred
   prediction = prediction + difference
-  plt.plot(num_in, np.array(history[:, 1]), label='History')
+  plt.plot(num_in, np.array(history[:, 0]), label='History')
   plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
            label='True Future')
   if prediction.any():

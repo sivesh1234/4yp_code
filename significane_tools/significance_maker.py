@@ -1,6 +1,3 @@
-#Weather forecast timeseries RNN MULTIVARIATE
-
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
 import random
@@ -19,7 +16,6 @@ mpl.rcParams['axes.grid'] = False
 vod = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(2000, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-
 short_window = 41
 long_window = 101
 
@@ -27,13 +23,9 @@ long_window = 101
 vod['signal'] = 0.0
 vod['short_mavg'] = vod['Close'].rolling(window=short_window,
                                               min_periods=1,center=False).mean()
-
 vod['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
 vod['short_mavg'] = vod['short_mavg'].shift(periods=(-50))
 vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
-
-#if short > long then 'signal' = 1
-
 vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['long_mavg'][short_window:], 1.0, 0.0)
 
 last3000 = vod['Close'][-3000:]
@@ -82,14 +74,11 @@ def multivariate_data(dataset, target, start_index, end_index, history_size,
   return np.array(data), np.array(labels)
 
 
-BATCH_SIZE = 100 #Batch size no. of periods fed intro training
-BUFFER_SIZE = 10000 #Buffer size greater than sample size to ensure perfect shuffle
-EVALUATION_INTERVAL = 200 #???
-EPOCHS = 3 #No. of times model trains over full data set
+
 
  #Splits up the testing and training data
-past_history = 90#periods fed into prediction for testing
-future_target = 30#periods predicted for testing
+past_history = 90 #periods fed into prediction for testing
+future_target = 30 #periods predicted for testing
 STEP = 1 #How many periods it samples over
 
 
@@ -122,27 +111,14 @@ def create_time_steps(length):
  #MULTISTEP MODEL
 
 
- #Returns training data set = x and labels = y
- #dataset can be multivariate but target has to be univariate
-x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
-                                                 TRAIN_SPLIT, past_history,
-                                                 future_target, STEP)
+
  #Returns testing data set = x and labels = y
 x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
-train_data_multi = (x_train_multi, y_train_multi)
-val_data_multi = (x_val_multi, y_val_multi)
 
-#Turns datasets into tf.data.Datasets ready for tensorflow
-# train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_multi))
-# #Shuffles and batches training data
-# train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
-#
-# val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
-# #Batches testing data
-# val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
+
 
 final_returns = []
 total_returns = 0
@@ -150,7 +126,7 @@ plot_returns = []
 multiple_returns = []
 
 #Defines plotting for multistep prediction
-
+open_price = x_val_multi[0][0][1]
 # Over 3000 days this makes 100 trades, one every 30 days
 def get_returns(history, true_future, prediction):
   #This randomly decides a buy,sell,hold
@@ -161,37 +137,17 @@ def get_returns(history, true_future, prediction):
   num_out = len(true_future)
   start = history[89][1]
   end = true_future[29]
-  returns = end - start
+  returns = ((end - start)/open_price)*100
   returns = returns*signal
   global final_returns
   global total_returns
   global plot_returns
   total_returns = total_returns + returns
-  # print(total_returns)
   plot_returns.append(total_returns)
 
-  # plt.plot(num_in, np.array(history[:, 1]), label='History')
-  # plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
-  #          label='Actual Price')
-  # if prediction.any():
-  #   plt.plot(np.arange(num_out)/STEP, np.array(prediction), 'ro',
-  #            label='Predicted Price')
-  # plt.legend(loc='upper left')
-  # plt.show()
 
 
-
-#Plots an example with no prediction
-# for x, y in train_data_multi.take(1):
-#   multi_step_plot(x[0], y[0], np.array([0]))
-
-
-
-
-
-# model = tf.keras.models.load_model('saved_model/my_model')
-
-
+#Monte Carlo simulation
 no_simulations = 1000
 
 for stepz in range(1,no_simulations):
@@ -204,9 +160,6 @@ for stepz in range(1,no_simulations):
         global multiple_returns
         get_returns(x_val_multi[alpha],y_val_multi[alpha],y_val_multi[alpha])
 
-    # plt.figure()
-    # plt.plot(plot_returns)
-    # plt.show()
     global final_returns
     global multiple_returns
     multiple_returns.append(plot_returns)
@@ -226,7 +179,10 @@ max = np.max(final_returns)
 min = np.amin(final_returns)
 mean = np.mean(final_returns)
 std = np.std(final_returns)
-plt.figure()
+
+
+
+
 
 plt.hist(final_returns,bins=20)
 plt.show()
@@ -234,9 +190,12 @@ plt.figure()
 
 plt.title('Monte-Carlo returns: MAX: {} MIN: {} MEAN: {} STD: {}'.format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
 plt.xlabel('Trades')
-plt.ylabel('PnL / sterling')
+plt.ylabel('% of start price - returns ')
 plt.plot(multiple_returns)
+
+
 plt.show()
+
 
 # plt.figure()
 # plt.plot(y_val_multi, label='true')
