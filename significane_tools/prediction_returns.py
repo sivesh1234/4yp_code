@@ -17,7 +17,7 @@ mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
 vod = pdr.get_data_yahoo('VOD',
-                          start=datetime.datetime(2000, 10, 26),
+                          start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
 short_window = 41
@@ -168,15 +168,23 @@ def predicted_returns(history, true_future, prediction):
   prediction_average = np.mean(prediction)
   predicted_end = prediction[29]
   #This sets the signal to the best option
-  print(prediction_average)
-  if prediction_average > start:
+  # positive = 0
+  # negative = 0
+  # for x in prediction:
+  #     if x > start:
+  #         positive = positive + 1
+  #     else:
+  #         negative = negative + 1
+  # print("positive is {}, negative is {}".format(positive,negative))
+  if predicted_end > start:
       signal = 1
       print("long")
-  elif prediction_average < start:
+  elif predicted_end < start:
       signal = -1
       print("short")
   else:
       signal = 0
+      print("flat")
   returns = ((end - start)/open_price)*100
   returns = returns*signal
   global final_returns
@@ -219,18 +227,19 @@ def multi_step_plot(history, true_future, prediction):
 
 
 
-model = tf.keras.models.load_model('saved_model/my_model')
+model = tf.keras.models.load_model('saved_model/vod_model')
 
 
 for alpha in range(0,3000,30):
+    print(alpha/30)
     pred = model.predict(x_val_multi)[alpha]
     global total_returns
     global plot_returns
     global multiple_returns
     predicted_returns(x_val_multi[alpha],y_val_multi[alpha],pred)
-    # multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
+    multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 plt.figure()
-plt.title('PnL using prediction RNN over 100 trades (one every 30 days) and signals')
+plt.title('Barclays RNN prediction (end prediction higher or lower)')
 plt.xlabel('Trades')
 plt.ylabel('% of start price - returns ')
 plt.plot(plot_returns)

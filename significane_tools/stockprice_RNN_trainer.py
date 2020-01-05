@@ -16,25 +16,25 @@ import yfinance
 mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
-vod = pdr.get_data_yahoo('VOD',
+share_data = pdr.get_data_yahoo('BARC.L',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
 short_window = 41
 long_window = 101
-
-#gives signals the same index (dates) as vod
-vod['signal'] = 0.0
-vod['short_mavg'] = vod['Close'].rolling(window=short_window,
+print(len(share_data['Close']))
+#gives signals the same index (dates) as share_data
+share_data['signal'] = 0.0
+share_data['short_mavg'] = share_data['Close'].rolling(window=short_window,
                                               min_periods=1,center=False).mean()
 
-vod['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
-vod['short_mavg'] = vod['short_mavg'].shift(periods=(-50))
-vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
+share_data['long_mavg'] = share_data['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
+share_data['short_mavg'] = share_data['short_mavg'].shift(periods=(-50))
+share_data['long_mavg'] = share_data['long_mavg'].shift(periods=(-50))
 
 #if short > long then 'signal' = 1
 
-vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['long_mavg'][short_window:], 1.0, 0.0)
+share_data['signal'][short_window:] = np.where(share_data['short_mavg'][short_window:] > share_data['long_mavg'][short_window:], 1.0, 0.0)
 
 
 
@@ -42,7 +42,7 @@ vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['
 TRAIN_SPLIT = 4000
 
 
-df = vod
+df = share_data
 
 features_considered = ['signal','Close']
 features = df[features_considered]
@@ -121,11 +121,11 @@ def create_time_steps(length):
 
 
  #Returns training data set = x and labels = y
-x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 0], 0,
+x_train_multi, y_train_multi = multivariate_data(dataset, dataset[:, 1], 0,
                                                  TRAIN_SPLIT, past_history,
                                                  future_target, STEP)
  #Returns testing data set = x and labels = y
-x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 0],
+x_val_multi, y_val_multi = multivariate_data(dataset, dataset[:, 1],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
@@ -149,11 +149,11 @@ def multi_step_plot(history, true_future, prediction):
   plt.figure(figsize=(12, 6))
   num_in = create_time_steps(len(history))
   num_out = len(true_future)
-  start = history[89][0]
+  start = history[89][1]
   start_pred = prediction[0]
   difference = start - start_pred
   prediction = prediction + difference
-  plt.plot(num_in, np.array(history[:, 0]), label='History')
+  plt.plot(num_in, np.array(history[:, 1]), label='History')
   plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
            label='True Future')
   if prediction.any():
@@ -197,14 +197,14 @@ model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
 #New fitting step
 multi_step_history = model.fit(x_train_multi, y_train_multi,
                     validation_data=(x_val_multi, y_val_multi),
-                    epochs=5, batch_size=100, verbose=1)
+                    epochs=10, batch_size=100, verbose=1)
 
 plot_train_history(multi_step_history, 'Multi-Step Training and validation loss')
 
 
 #Save model
 
-model.save('saved_model/1-0_model')
+model.save('saved_model/BARC_model')
 
 for alpha in range(0,1000,250):
     pred = model.predict(x_val_multi)[alpha]

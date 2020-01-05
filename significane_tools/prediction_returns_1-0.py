@@ -20,8 +20,8 @@ vod = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(2000, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
-short_window = 41
-long_window = 101
+short_window = 30
+long_window = 80
 
 #gives signals the same index (dates) as vod
 vod['signal'] = 0.0
@@ -29,8 +29,10 @@ vod['short_mavg'] = vod['Close'].rolling(window=short_window,
                                               min_periods=1,center=False).mean()
 
 vod['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
-vod['short_mavg'] = vod['short_mavg'].shift(periods=(-50))
-vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
+
+####Make ANTI CAUSAL
+# vod['short_mavg'] = vod['short_mavg'].shift(periods=(-50))
+# vod['long_mavg'] = vod['long_mavg'].shift(periods=(-50))
 
 #if short > long then 'signal' = 1
 
@@ -177,10 +179,10 @@ def predicted_returns(history, true_future, prediction):
   predicted_end = prediction[29]
   #This sets the signal to the best option
   print("predicted_average {}".format(prediction_average))
-  if prediction_average > 0.5:
+  if prediction_average > 0.9:
       signal = 1
       print("long")
-  elif prediction_average < 0.5:
+  elif prediction_average < 0.1:
       signal = -1
       print("short")
   else:
@@ -232,6 +234,7 @@ model = tf.keras.models.load_model('saved_model/1-0_model')
 
 for alpha in range(0,3000,30):
     pred = model.predict(x_val_multi)[alpha]
+    # pred = y_val_all[:][:][0]
     global total_returns
     global plot_returns
     global multiple_returns
