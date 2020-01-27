@@ -15,7 +15,10 @@ vod = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(2000, 5, 26),
                           end=datetime.datetime(2019, 10, 26))
                           #year, month, date
+
+
 vod = vod.tail(3300)
+print(vod.tail()) 
 short_window = 41
 long_window = 101
 
