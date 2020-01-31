@@ -50,22 +50,33 @@ B_data.index = tar_data.index
 
 
 #gives signals the same index (dates) as tar_data
+tar_data['A_Close'] = tar_data['Close']
 tar_data['B_Close'] = B_data['Close']
 tar_data['C_Close'] = C_data['Close']
-tar_data['signal'] = 0.0
-tar_data['short_mavg'] = tar_data['Close'].rolling(window=short_window,
+
+
+
+tar_data['A_signal'] = 0.0
+tar_data['B_signal'] = 0.0
+tar_data['C_signal'] = 0.0
+tar_data['A_short_mavg'] = tar_data['A_Close'].rolling(window=short_window,
                                               min_periods=1,center=False).mean()
 
-tar_data['long_mavg'] = tar_data['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
+tar_data['A_long_mavg'] = tar_data['A_Close'].rolling(window=long_window,min_periods=1,center=False).mean()
 
-####Make ANTI CAUSAL
-# tar_data['short_mavg'] = tar_data['short_mavg'].shift(periods=(-50))
-# tar_data['long_mavg'] = tar_data['long_mavg'].shift(periods=(-50))
+tar_data['A_signal'][short_window:] = np.where(tar_data['A_short_mavg'][short_window:] > tar_data['A_long_mavg'][short_window:], 1.0, 0.0)
+tar_data['B_short_mavg'] = tar_data['B_Close'].rolling(window=short_window,
+                                              min_periods=1,center=False).mean()
 
-#if short > long then 'signal' = 1
+tar_data['B_long_mavg'] = tar_data['B_Close'].rolling(window=long_window,min_periods=1,center=False).mean()
 
-tar_data['signal'][short_window:] = np.where(tar_data['short_mavg'][short_window:] > tar_data['long_mavg'][short_window:], 1.0, 0.0)
+tar_data['B_signal'][short_window:] = np.where(tar_data['B_short_mavg'][short_window:] > tar_data['B_long_mavg'][short_window:], 1.0, 0.0)
+tar_data['C_short_mavg'] = tar_data['C_Close'].rolling(window=short_window,
+                                              min_periods=1,center=False).mean()
 
+tar_data['C_long_mavg'] = tar_data['C_Close'].rolling(window=long_window,min_periods=1,center=False).mean()
+
+tar_data['C_signal'][short_window:] = np.where(tar_data['C_short_mavg'][short_window:] > tar_data['C_long_mavg'][short_window:], 1.0, 0.0)
 
 
 
@@ -74,7 +85,7 @@ TRAIN_SPLIT = 1500
 
 df = tar_data
 
-features_considered = ['signal','Close','B_Close','C_Close']
+features_considered = ['A_signal','A_Close','B_signal','B_Close','C_signal','C_Close']
 features = df[features_considered]
 features.index = df.index
 # features.plot(subplots=True)
@@ -167,8 +178,7 @@ x_val_multi, y_val_multi, y_val_all = multivariate_data(dataset, dataset[:, 0],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
 
-train_data_multi = (x_train_multi, y_train_multi)
-val_data_multi = (x_val_multi, y_val_multi)
+
 
 #Turns datasets into tf.data.Datasets ready for tensorflow
 # train_data_multi = tf.data.Dataset.from_tensor_slices((x_train_multi, y_train_multi))
@@ -178,17 +188,22 @@ val_data_multi = (x_val_multi, y_val_multi)
 # val_data_multi = tf.data.Dataset.from_tensor_slices((x_val_multi, y_val_multi))
 # #Batches testing data
 # val_data_multi = val_data_multi.batch(BATCH_SIZE).repeat()
+
 final_returns = []
 total_returns = 0
 plot_returns = []
 multiple_returns = []
-all_signals = []
-
+A_signals = []
+B_signals = []
+C_signals = []
+weight_A = 1/3
+weight_B = 1/3
+weight_C = 1/3
 #Defines plotting for multistep prediction
 open_price = x_val_multi[0][0][1]
 print(open_price)
 # Over 3000 days this makes 100 trades, one every 30 days
-def predicted_returns(history, true_future, prediction):
+def predicted_returns_A(history, true_future, prediction,weight_A):
   #This randomly decides a buy,sell,hold
 
   signal = 0
@@ -216,17 +231,128 @@ def predicted_returns(history, true_future, prediction):
   else:
       signal = 0
   returns = ((end - start)/open_price)*100
-  returns = returns*signal
+  returns = returns*signal*weight_A
   global final_returns
   global total_returns
   global plot_returns
-  global all_signals
+  global A_signals
   total_returns = total_returns + returns
   print(total_returns)
   # print(total_returns)
   plot_returns.append(total_returns)
-  all_signals.append(signal)
+  A_signals.append(signal)
   return signal, returns
+def predicted_returns_B(history, true_future, prediction, weight_B):
+  #This randomly decides a buy,sell,hold
+
+  signal = 0
+  num_in = create_time_steps(len(history))
+  num_out = len(true_future)
+  start = history[89][3]
+  start_10 = history[89][2]
+
+  std = np.std(history[:][3])
+  end = true_future[29][3]
+
+  start_pred = prediction[2]
+  difference = start_10 - start_pred
+  prediction = prediction + difference
+  prediction_average = np.mean(prediction)
+  predicted_end = prediction[29]
+  #This sets the signal to the best option
+  print("predicted_average {}".format(prediction_average))
+  if prediction_average > 1.02:
+      signal = 1
+      print("long")
+  elif prediction_average < 0.02:
+      signal = -1
+      print("short")
+  else:
+      signal = 0
+  returns = ((end - start)/open_price)*100
+  returns = returns*signal*weight_B
+  global final_returns
+  global total_returns
+  global plot_returns
+  global B_signals
+  total_returns = total_returns + returns
+  print(total_returns)
+  # print(total_returns)
+  plot_returns.append(total_returns)
+  B_signals.append(signal)
+  return signal, returns
+def predicted_returns_C(history, true_future, prediction,weight_C):
+  #This randomly decides a buy,sell,hold
+
+  signal = 0
+  num_in = create_time_steps(len(history))
+  num_out = len(true_future)
+  start = history[89][5]
+  start_10 = history[89][4]
+
+  std = np.std(history[:][5])
+  end = true_future[29][5]
+
+  start_pred = prediction[4]
+  difference = start_10 - start_pred
+  prediction = prediction + difference
+  prediction_average = np.mean(prediction)
+  predicted_end = prediction[29]
+  #This sets the signal to the best option
+  print("predicted_average {}".format(prediction_average))
+  if prediction_average > 1.02:
+      signal = 1
+      print("long")
+  elif prediction_average < 0.02:
+      signal = -1
+      print("short")
+  else:
+      signal = 0
+  returns = ((end - start)/open_price)*100
+  returns = returns*signal*weight_C
+  global final_returns
+  global total_returns
+  global plot_returns
+  global C_signals
+  total_returns = total_returns + returns
+  print(total_returns)
+  # print(total_returns)
+  plot_returns.append(total_returns)
+  C_signals.append(signal)
+  return signal, returns
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -323,13 +449,17 @@ model = tf.keras.models.load_model('saved_model/BT_multi1-0_model')
 for alpha in range(0,3000,30):
     trade = alpha/30
     print(alpha/30)
-    pred = model.predict(x_val_multi)[alpha]
-    # pred = y_val_all[:][:][0]
+
+    pred_A = model.predict(x_val_multi)[alpha]
+    pred = y_val_all[:][:][0]
     global total_returns
     global plot_returns
     global multiple_returns
-    signal,returns = predicted_returns(x_val_multi[alpha],y_val_all[alpha],pred)
-    multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred,signal,returns,trade)
+    signal,returns = predicted_returns_A(x_val_multi[alpha],y_val_all[alpha],pred_A)
+    signal,returns = predicted_returns_B(x_val_multi[alpha],y_val_all[alpha],pred)
+    signal,returns = predicted_returns_C(x_val_multi[alpha],y_val_all[alpha],pred)
+    # multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred,signal,returns,trade)
+    print(total_returns)
 
 
 
