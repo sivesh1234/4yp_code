@@ -16,14 +16,14 @@ import yfinance
 mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
-tar_data = pdr.get_data_yahoo('BT-A.L',
-                          start=datetime.datetime(2000, 10, 26),
+tar_data = pdr.get_data_yahoo('TEF.MC',
+                          start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
 
-B_data = pdr.get_data_yahoo('VOD',
+B_data = pdr.get_data_yahoo('BT-A.L',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-C_data = pdr.get_data_yahoo('TEF.MC',
+C_data = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))                          #year, month, date
 
@@ -207,7 +207,7 @@ def predicted_returns(history, true_future, prediction):
   predicted_end = prediction[29]
   #This sets the signal to the best option
   print("predicted_average {}".format(prediction_average))
-  if prediction_average > 1.02:
+  if prediction_average > 0.98:
       signal = 1
       print("long")
   elif prediction_average < 0.02:
@@ -317,7 +317,7 @@ def multi_step_plot(history, true_future, prediction,signal=0,returns=0,trade=0)
 
 
 
-model = tf.keras.models.load_model('saved_model/BT_multi1-0_model')
+model = tf.keras.models.load_model('saved_model/TEL_multi1-0_model')
 
 
 for alpha in range(0,3000,30):
@@ -342,7 +342,7 @@ ax1.set_xlabel('Trades')
 ax1.set_ylabel('% of start price - returns', color='b')
 ax2.set_ylim([-7,7])
 ax2.set_ylabel('position', color='r')
-plt.title('BTmulti-PnL using RNN 1 or 0 prediction (2% anti-symmetric threshold)')
+plt.title('TELmulti-PnL using RNN 1 or 0 prediction (2% symmetric threshold)')
 plt.show()
 
 
