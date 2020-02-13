@@ -88,19 +88,7 @@ mean_returns = returns.mean()
 cov_matrix = returns.cov()
 num_portfolios = 10000
 risk_free_rate = 0.00
-def neg_sharpe_ratio(weights, mean_returns, cov_matrix, risk_free_rate):
-    p_var, p_ret = portfolio_annualised_performance(weights, mean_returns, cov_matrix)
-    return -(p_ret - risk_free_rate) / p_var
 
-def max_sharpe_ratio(mean_returns, cov_matrix, risk_free_rate):
-    num_assets = len(mean_returns)
-    args = (mean_returns, cov_matrix, risk_free_rate)
-    constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
-    bound = (0.0,1.0)
-    bounds = tuple(bound for asset in range(num_assets))
-    result = sco.minimize(neg_sharpe_ratio, num_assets*[1./num_assets,], args=args,
-                        method='SLSQP', bounds=bounds, constraints=constraints)
-    return result
 
 
 def display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate):
@@ -134,11 +122,11 @@ def display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, r
     plt.figure(figsize=(10, 7))
     plt.scatter(results[0,:],results[1,:],c=results[2,:],cmap='YlGnBu', marker='o', s=10, alpha=0.3)
     plt.colorbar()
-    plt.scatter(sdp,rp,marker='*',color='r',s=500, label='Maximum Sharpe ratio')
-    plt.scatter(sdp_min,rp_min,marker='*',color='g',s=500, label='Minimum volatility')
-    plt.title('Simulated Portfolio Optimization based on Efficient Frontier')
-    plt.xlabel('annualised volatility')
-    plt.ylabel('annualised returns')
+    plt.scatter(sdp,rp,marker='*',color='g',s=300, label='Max Sharpe')
+    # plt.scatter(sdp_min,rp_min,marker='*',color='g',s=500, label='Minimum volatility')
+    plt.title('BT, TEF and VOD Portfolio Optimization - Efficient Frontier')
+    plt.xlabel('volatility - (annualised)')
+    plt.ylabel('returns - (annualised)')
     plt.legend(labelspacing=0.8)
 
 display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate)

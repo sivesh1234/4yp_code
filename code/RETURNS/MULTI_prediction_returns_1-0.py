@@ -12,6 +12,9 @@ import pandas as pd
 import datetime
 from pandas_datareader import data as pdr
 import yfinance
+from numpy import asarray
+from numpy import save
+
 #Matplot lib stuff
 mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
@@ -226,7 +229,7 @@ def predicted_returns(history, true_future, prediction):
   # print(total_returns)
   plot_returns.append(total_returns)
   all_signals.append(signal)
-  return signal, returns
+  return signal, returns, prediction_average
 
 
 
@@ -319,7 +322,7 @@ def multi_step_plot(history, true_future, prediction,signal=0,returns=0,trade=0)
 
 model = tf.keras.models.load_model('saved_model/TEL_multi1-0_model')
 
-
+prediction_array = []
 for alpha in range(0,3000,30):
     trade = alpha/30
     print(alpha/30)
@@ -328,11 +331,12 @@ for alpha in range(0,3000,30):
     global total_returns
     global plot_returns
     global multiple_returns
-    signal,returns = predicted_returns(x_val_multi[alpha],y_val_all[alpha],pred)
-    multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred,signal,returns,trade)
+    signal,returns, prediction_average = predicted_returns(x_val_multi[alpha],y_val_all[alpha],pred)
+    # multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred,signal,returns,trade)
+    prediction_array.append(prediction_average)
 
 
-
+save('c_predictions.npy',prediction_array)
 ####NEW PLOTTING METHOD
 fig,ax1 = plt.subplots()
 ax2 = ax1.twinx()

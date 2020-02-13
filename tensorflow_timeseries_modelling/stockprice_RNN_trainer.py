@@ -39,7 +39,7 @@ vod['signal'][short_window:] = np.where(vod['short_mavg'][short_window:] > vod['
 
 
 
-TRAIN_SPLIT = 1500
+TRAIN_SPLIT = 3000
 
 
 df = vod
@@ -50,9 +50,9 @@ features.index = df.index
 features.plot(subplots=True)
 dataset = features.values
 
-data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
-data_std = dataset[:TRAIN_SPLIT].std(axis=0)
-dataset = (dataset-data_mean)/data_std
+# data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
+# data_std = dataset[:TRAIN_SPLIT].std(axis=0)
+# dataset = (dataset-data_mean)/data_std
 
 
 #Creates a data set with associated labels. Takes index for these data sets as inputs
@@ -194,14 +194,14 @@ model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
 #New fitting step
 multi_step_history = model.fit(x_train_multi, y_train_multi,
                     validation_data=(x_val_multi, y_val_multi),
-                    epochs=3, batch_size=64, verbose=1)
+                    epochs=10, batch_size=64, verbose=1)
 
 plot_train_history(multi_step_history, 'Multi-Step Training and validation loss')
 
 
 #Save model
 
-model.save('saved_model/my_model')
+model.save('saved_model/original_model2')
 
 for alpha in range(0,1000,250):
     pred = model.predict(x_val_multi)[alpha]

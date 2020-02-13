@@ -183,12 +183,15 @@ std = np.std(final_returns)
 
 
 
-
+plt.figure()
 plt.hist(final_returns,bins=20)
-plt.show()
+plt.title("Random Returns - Histogram")
+plt.xlabel('Final returns')
+plt.ylabel('Frequency')
+
 plt.figure()
 
-plt.title('Monte-Carlo returns: MAX: {} MIN: {} MEAN: {} STD: {}'.format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
+plt.title("MAX: {} MIN: {} MEAN: {} STD: {}".format(np.max(final_returns),np.amin(final_returns),np.mean(final_returns),np.std(final_returns)))
 plt.xlabel('Trades')
 plt.ylabel('% of start price - returns ')
 plt.plot(multiple_returns)

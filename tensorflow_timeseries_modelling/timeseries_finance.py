@@ -50,9 +50,9 @@ uni_data.index = df.index
 uni_data = uni_data.values
 
 #Need to normalise features before training a neural network
-uni_train_mean = uni_data[:TRAIN_SPLIT].mean()
-uni_train_std = uni_data[:TRAIN_SPLIT].std()
-uni_data = (uni_data-uni_train_mean)/uni_train_std
+# uni_train_mean = uni_data[:TRAIN_SPLIT].mean()
+# uni_train_std = uni_data[:TRAIN_SPLIT].std()
+# uni_data = (uni_data-uni_train_mean)/uni_train_std
 
 
 #Give 20 last temps to predict next time step

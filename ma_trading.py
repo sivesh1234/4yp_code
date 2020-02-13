@@ -18,7 +18,7 @@ vod = pdr.get_data_yahoo('VOD',
 
 
 vod = vod.tail(3300)
-print(vod.tail()) 
+print(vod.tail())
 short_window = 41
 long_window = 101
 
@@ -28,6 +28,7 @@ signals['short_mavg'] = vod['Close'].rolling(window=short_window,
                                               min_periods=1,center=False).mean()
 
 signals['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
+signals['Close Price'] = vod['Close']
 # signals['short_mavg'] = signals['short_mavg'].shift(periods=(-50))
 # signals['long_mavg'] = signals['long_mavg'].shift(periods=(-50))
 
@@ -39,8 +40,8 @@ signals['positions'] = signals['signal'].diff()
 #Plot buy and sells
 fig = plt.figure()
 yaxis = fig.add_subplot(111,ylabel='Price')
-vod['Close'].plot(ax=yaxis,color='r')
-signals[['short_mavg','long_mavg']].plot(ax=yaxis)
+plt.title('Demonstration of moving average strategy on Vodafone')
+signals[['Close Price','short_mavg','long_mavg']].plot(ax=yaxis)
 yaxis.plot(signals.loc[signals.positions == 1.0].index, signals.short_mavg[signals.positions == 1.0],'^', markersize=10, color='b')
 yaxis.plot(signals.loc[signals.positions == -1.0].index, signals.short_mavg[signals.positions == -1.0], 'v', markersize=10, color='r')
 
