@@ -253,12 +253,12 @@ def predicted_weighted_returns(history, true_future, prediction ,weight,open_pri
       signal = 0
       print("flat")
   returns = ((end - start)/open_price)*100
-  if weight < -0.5:
-      signal = 1
-  elif weight > 0.5:
-      signal = 1
-  else:
-      signal = signal
+  # if weight < -0.5:
+  #     signal = 1
+  # elif weight > 0.5:
+  #     signal = 1
+  # else:
+  #     signal = signal
   returns = returns*signal*weight
   global final_returns
   global total_returns
@@ -459,7 +459,7 @@ for alpha in range(0,3000,30):
     # weight_B = (weight_allocation[1]/100)
     #
     # weight_C = (weight_allocation[2]/100)
-    weights_array.append(weight_allocation)
+    # weights_array.append(weight_allocation)
     weight_A = 1/3
     weight_B = 1/3
     weight_C = 1/3
