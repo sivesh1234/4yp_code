@@ -27,14 +27,17 @@ mpl.rcParams['axes.grid'] = False
 #Getting data
 
 #BT, VOD AND TEF is order for working
-tar_data = pdr.get_data_yahoo('BT-A.L',
+stock1 = 'BT-A.L'
+stock2 = 'VOD'
+stock3 = 'TEF.MC'
+tar_data = pdr.get_data_yahoo(stock1,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
 
-B_data = pdr.get_data_yahoo('VOD',
+B_data = pdr.get_data_yahoo(stock2,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-C_data = pdr.get_data_yahoo('TEF.MC',
+C_data = pdr.get_data_yahoo(stock3,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))                          #year, month, date
 
@@ -45,6 +48,7 @@ long_window = 80
 len_tar = len(tar_data['Close'])
 len_B = len(B_data['Close'])
 len_C = len(C_data['Close'])
+print(len_tar)
 
 min_len = min([len_tar,len_B,len_C])
 dif_tar = len_tar - min_len
@@ -194,6 +198,42 @@ def create_time_steps(length):
 #                                                  TRAIN_SPLIT, past_history,
 #                                                  future_target, STEP)
  #Returns testing data set = x and labels = y
+
+
+####PLOTTING THE TESTING ENVIORNMENT
+plot_range = range(1500,(1500+3030))
+
+A_plot_data = A_dataset[plot_range]
+A_plot_data = A_plot_data[:,1]
+B_plot_data = B_dataset[plot_range]
+B_plot_data = B_plot_data[:,1]
+C_plot_data = C_dataset[plot_range]
+C_plot_data = C_plot_data[:,1]
+
+####CALCULATES TOTAL MARKOVITZ WEIGHTS
+# plot_table = create_table(A_plot_data,B_plot_data,C_plot_data)
+# weight_allocation = calculate_weights(plot_table)
+# print("weight allocation is {}".format(weight_allocation))
+
+
+
+
+plt.subplot(311)
+plt.title(stock1)
+plt.plot(A_plot_data,'r')
+plt.subplot(312)
+plt.title(stock2)
+plt.plot(B_plot_data,'g')
+plt.subplot(313)
+plt.title(stock3)
+plt.plot(C_plot_data,'y')
+
+plt.figure()
+
+
+
+
+####SETTTING UP DATA FRAMES
 A_x_val_multi, A_y_val_multi, A_y_val_all = multivariate_data(A_dataset, A_dataset[:, 0],
                                              TRAIN_SPLIT, None, past_history,
                                              future_target, STEP)
@@ -221,7 +261,6 @@ A_signals = []
 B_signals = []
 C_signals = []
 
-#Defines plotting for multistep prediction
 A_open_price = A_x_val_multi[0][0][1]
 B_open_price = B_x_val_multi[0][0][1]
 C_open_price = C_x_val_multi[0][0][1]
@@ -272,85 +311,6 @@ def predicted_weighted_returns(history, true_future, prediction ,weight,open_pri
   # plot_returns.append(total_returns)
   # A_signals.append(signal)
   return signal, prediction_average
-# def predicted_returns_B(history, true_future, prediction, weight_B):
-#   #This randomly decides a buy,sell,hold
-#
-#   signal = 0
-#   num_in = create_time_steps(len(history))
-#   num_out = len(true_future)
-#   start = history[89][3]
-#   start_10 = history[89][2]
-#
-#   std = np.std(history[:][3])
-#   end = true_future[29][3]
-#
-#   start_pred = prediction[2]
-#   difference = start_10 - start_pred
-#   prediction = prediction + difference
-#   prediction_average = np.mean(prediction)
-#   predicted_end = prediction[29]
-#   #This sets the signal to the best option
-#   print("predicted_average {}".format(prediction_average))
-#   if prediction_average > 1.02:
-#       signal = 1
-#       print("long")
-#   elif prediction_average < 0.02:
-#       signal = -1
-#       print("short")
-#   else:
-#       signal = 0
-#   returns = ((end - start)/open_price)*100
-#   returns = returns*signal*weight_B
-#   global final_returns
-#   global total_returns
-#   global plot_returns
-#   global B_signals
-#   total_returns = total_returns + returns
-#   print(total_returns)
-#   # print(total_returns)
-#   plot_returns.append(total_returns)
-#   B_signals.append(signal)
-#   return signal, returns
-# def predicted_returns_C(history, true_future, prediction,weight_C):
-#   #This randomly decides a buy,sell,hold
-#
-#   signal = 0
-#   num_in = create_time_steps(len(history))
-#   num_out = len(true_future)
-#   start = history[89][5]
-#   start_10 = history[89][4]
-#
-#   std = np.std(history[:][5])
-#   end = true_future[29][5]
-#
-#   start_pred = prediction[4]
-#   difference = start_10 - start_pred
-#   prediction = prediction + difference
-#   prediction_average = np.mean(prediction)
-#   predicted_end = prediction[29]
-#   #This sets the signal to the best option
-#   print("predicted_average {}".format(prediction_average))
-#   if prediction_average > 1.02:
-#       signal = 1
-#       print("long")
-#   elif prediction_average < 0.02:
-#       signal = -1
-#       print("short")
-#   else:
-#       signal = 0
-#   returns = ((end - start)/open_price)*100
-#   returns = returns*signal*weight_C
-#   global final_returns
-#   global total_returns
-#   global plot_returns
-#   global C_signals
-#   total_returns = total_returns + returns
-#   print(total_returns)
-#   # print(total_returns)
-#   plot_returns.append(total_returns)
-#   C_signals.append(signal)
-#   return signal, returns
-#
 
 
 
@@ -435,40 +395,46 @@ A_predictions = load('a_predictions.npy')
 B_predictions = load('b_predictions.npy')
 C_predictions = load('c_predictions.npy')
 weights_array = []
+
+A_prices_data = A_dataset[:,1]
+B_prices_data = B_dataset[:,1]
+C_prices_data = C_dataset[:,1]
+
 for alpha in range(0,3000,30):
     trade = int(alpha/30)
     print("-"*500)
     print("period {}".format(alpha/30))
+    start_markovitz_index = 1500 + alpha - 1290 ###CHANGE THE LAST NUMBER
+    end_markovitz_index = 1500 + alpha + 90 ###FIXED
 
+    new_indices = range(start_markovitz_index,end_markovitz_index)
+
+    A_prices_total = A_prices_data[new_indices]
+    B_prices_total = B_prices_data[new_indices]
+    C_prices_total = C_prices_data[new_indices]
 
     global total_returns
     global plot_returns
     global multiple_returns
-    A_more_prices = []
 
 
 
-    A_prices = np.array(A_x_val_multi[alpha][:,1])
-    B_prices = np.array(B_x_val_multi[alpha][:,1])
-    C_prices = np.array(C_x_val_multi[alpha][:,1])
-    A_more_prices.append(A_prices)
-    A_more_prices = np.array(A_more_prices)
-    table = create_table(A_prices, B_prices, C_prices)
-    plt.plot(A_prices)
-    plt.show()
+    table = create_table(A_prices_total, B_prices_total, C_prices_total)
+
+
 
     weight_allocation = calculate_weights(table)
     print("weight allocation is {}".format(weight_allocation))
 
-    # weight_A = (weight_allocation[0]/100)
-    #
-    # weight_B = (weight_allocation[1]/100)
-    #
-    # weight_C = (weight_allocation[2]/100)
-    # weights_array.append(weight_allocation)
-    weight_A = 1/3
-    weight_B = 1/3
-    weight_C = 1/3
+    weight_A = (weight_allocation[0]/100)
+
+    weight_B = (weight_allocation[1]/100)
+
+    weight_C = (weight_allocation[2]/100)
+    weights_array.append(weight_allocation)
+    # weight_A = 0.6475
+    # weight_B = 0.317
+    # weight_C = -0.03
 
     print("-"*80)
     print("trade1")
