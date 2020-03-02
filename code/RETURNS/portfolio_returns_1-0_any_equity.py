@@ -27,9 +27,9 @@ mpl.rcParams['axes.grid'] = False
 #Getting data
 
 #BT, VOD AND TEF is order for working
-stock1 = 'BT-A.L'
-stock2 = 'VOD'
-stock3 = 'TEF.MC'
+stock1 = 'LLOY.L'
+stock2 = 'TEF.MC'
+stock3 = 'TSCO.L'
 tar_data = pdr.get_data_yahoo(stock1,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
@@ -279,7 +279,15 @@ def predicted_weighted_returns(history, true_future, prediction ,weight,open_pri
   end = true_future[29][1]
 
 
-  prediction_average = prediction
+
+  start_pred = prediction[0]
+  difference = start_10 - start_pred
+  prediction = prediction + difference
+  prediction_average = np.mean(prediction)
+  predicted_end = prediction[29]
+
+
+
 
 
   #This sets the signal to the best option
@@ -294,27 +302,23 @@ def predicted_weighted_returns(history, true_future, prediction ,weight,open_pri
       signal = 0
       print("flat")
   returns = ((end - start)/open_price)*100
-
-
-  ### Weight / Signal clash logic
-  # if weight < 0 and signal = -1:
-  #     weight = weight*(-1)
-  # elif weight < 0 and signal = +1:
-  #     weight = weight*(-1)
+  # if weight < -0.5:
+  #     signal = 1
+  # elif weight > 0.5:
+  #     signal = 1
   # else:
-  #     weight  = weight
-
-  returns = returns
+  #     signal = signal
+  returns = returns*signal*weight
   global final_returns
   global total_returns
   global plot_returns
 
-  # total_returns = total_returns + returns
+  total_returns = total_returns + returns
   print("returns on trade {}".format(returns))
   # print(total_returns)
   # plot_returns.append(total_returns)
   # A_signals.append(signal)
-  return returns, signal, prediction_average
+  return signal, prediction_average
 
 
 
@@ -394,24 +398,31 @@ def multi_step_plot(history, true_future, prediction,signal=0,returns=0,trade=0)
 
 
 
+A_model = tf.keras.models.load_model('saved_model/LLOY.L_multi1-0_model')
+B_model = tf.keras.models.load_model('saved_model/TEF.MC_multi1-0_model')
+C_model = tf.keras.models.load_model('saved_model/TSCO.L_multi1-0_model')
 
-A_predictions = load('a_predictions.npy')
-B_predictions = load('b_predictions.npy')
-C_predictions = load('c_predictions.npy')
+
+
 weights_array = []
-positions_array = []
+
 A_prices_data = A_dataset[:,1]
 B_prices_data = B_dataset[:,1]
 C_prices_data = C_dataset[:,1]
-
+A_predictions = []
+B_predictions = []
+C_predictions = []
 for alpha in range(0,3000,30):
     trade = int(alpha/30)
     print("-"*500)
     print("period {}".format(alpha/30))
-    start_markovitz_index = 1500 + alpha - 1110 ###CHANGE THE LAST NUMBER
+    start_markovitz_index = 1500 + alpha  ###CHANGE THE LAST NUMBER
     end_markovitz_index = 1500 + alpha + 90 ###FIXED
 
     new_indices = range(start_markovitz_index,end_markovitz_index)
+    pred_B = B_model.predict(B_x_val_multi)[alpha]
+    pred_A = A_model.predict(A_x_val_multi)[alpha]
+    pred_C = A_model.predict(C_x_val_multi)[alpha]
 
     A_prices_total = A_prices_data[new_indices]
     B_prices_total = B_prices_data[new_indices]
@@ -430,99 +441,53 @@ for alpha in range(0,3000,30):
     weight_allocation = calculate_weights(table)
     print("weight allocation is {}".format(weight_allocation))
 
-    weight_allocation = weight_allocation / 100
+    weight_A = (weight_allocation[0]/100)
 
-    weight_A = weight_allocation[0]
+    weight_B = (weight_allocation[1]/100)
 
-    weight_B = weight_allocation[1]
-
-    weight_C = weight_allocation[2]
-
-    weight_A = abs(weight_A)
-    weight_B = abs(weight_B)
-    weight_C = abs(weight_C)
+    weight_C = (weight_allocation[2]/100)
     weights_array.append(weight_allocation)
-
+    # weight_A = 1/3
+    # weight_B = 1/3
+    # weight_C = 1/3
 
     print("-"*80)
     print("trade1")
-    A_returns,A_signal,A_predict = predicted_weighted_returns(A_x_val_multi[alpha],A_y_val_all[alpha],A_predictions[trade],weight_A,A_open_price)
+    A_signal,A_predict = predicted_weighted_returns(A_x_val_multi[alpha],A_y_val_all[alpha],pred_A,weight_A,A_open_price)
     print("-"*80)
     print("trade2")
-    B_returns,B_signal,B_predict = predicted_weighted_returns(B_x_val_multi[alpha],B_y_val_all[alpha],B_predictions[trade],weight_B,B_open_price)
+    B_signal,B_predict = predicted_weighted_returns(B_x_val_multi[alpha],B_y_val_all[alpha],pred_B,weight_B,B_open_price)
     print("-"*80)
     print("trade3")
-    C_returns,C_signal,C_predict = predicted_weighted_returns(C_x_val_multi[alpha],C_y_val_all[alpha],C_predictions[trade],weight_C,C_open_price)
-
-
-    ###NEW LOGIC FOR MAKING POSITION
-
-    signal_array = [A_signal,B_signal,C_signal]
-
-    new_weights = np.multiply(weight_allocation,signal_array)
-    sum_weights = 0
-    for x in new_weights:
-        sum_weights = sum_weights + abs(x)
-    if sum_weights == 0:
-        new_weights = new_weights
-    else:
-        new_weights = new_weights / sum_weights
-    positions_array.append(new_weights)
-    print("new weights are {}".format(new_weights))
-    A_returns = float(A_returns * new_weights[0])
-    B_returns = float(B_returns * new_weights[1])
-    C_returns = float(C_returns * new_weights[2])
-    print("A_returns is {}".format(A_returns))
-    print("B_returns is {}".format(B_returns))
-    print("C_returns is {}".format(C_returns))
-
-    ###OLD logic
-    # A_returns = A_returns * weight_A * A_signal
-    # B_returns = B_returns * weight_B * B_signal
-    # C_returns = C_returns * weight_C * C_signal
-
-
-
-
-    total_returns = total_returns + A_returns + B_returns + C_returns
+    C_signal,C_predict = predicted_weighted_returns(C_x_val_multi[alpha],C_y_val_all[alpha],pred_C,weight_C,C_open_price)
     plot_returns.append(total_returns)
     A_signals.append(A_signal)
     B_signals.append(B_signal)
     C_signals.append(C_signal)
+    A_predictions.append(A_predict)
+    B_predictions.append(B_predict)
+    C_predictions.append(C_predict)
 
 
     print("final returns is {}".format(total_returns))
 
-###Plot positions
-plt.title("Markovitz weights")
-weights_array = np.array(weights_array)
-plt.plot(weights_array[:,0],'r',label=stock1)
-plt.plot(weights_array[:,1],'g',label=stock2)
-plt.plot(weights_array[:,2],'y',label=stock3)
-plt.legend()
-####Plot markovitz weights
-plt.figure()
-plt.title("Final positions plot")
-positions_array = np.array(positions_array)
-plt.plot(positions_array[:,0],'r',label=stock1)
-plt.plot(positions_array[:,1],'g',label=stock2)
-plt.plot(positions_array[:,2],'y',label=stock3)
-plt.legend()
 
+save('a2_predictions.npy',A_predictions)
+save('b2_predictions.npy',B_predictions)
+save('c2_predictions.npy',C_predictions)
 
-
-
+plt.title("Weightings {} {} {}".format(stock1,stock2,stock3))
+plt.plot(weights_array)
 ####NEW PLOTTING METHOD
 fig,ax1 = plt.subplots()
 ax2 = ax1.twinx()
 ax1.plot(plot_returns, 'b-')
-ax2.plot(A_signals, 'r',label=stock1)
-ax2.plot(B_signals, 'g',label=stock2)
-ax2.plot(C_signals, 'y',label=stock3)
-plt.legend()
+ax2.plot(A_signals, 'r')
+ax2.plot(B_signals, 'g')
+ax2.plot(C_signals, 'y')
 ax1.set_xlabel('Trades')
 ax1.set_ylabel('% of start price - returns', color='b')
 ax2.set_ylim([-7,7])
-ax2.set_ylabel('signal')
+ax2.set_ylabel('position', color='r')
 plt.title('portfolio returns (2% anti-symmetric threshold)')
 plt.show()

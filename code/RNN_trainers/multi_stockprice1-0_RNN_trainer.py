@@ -16,14 +16,14 @@ import yfinance
 mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
-tar_data = pdr.get_data_yahoo('BT-A.L',
+tar_data = pdr.get_data_yahoo('TSCO.L',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
-B_data = pdr.get_data_yahoo('TEF.MC',
+B_data = pdr.get_data_yahoo('LLOY.L',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-C_data = pdr.get_data_yahoo('VOD',
+C_data = pdr.get_data_yahoo('TEF.MC',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
 
@@ -66,10 +66,10 @@ tar_data['long_mavg'] = tar_data['long_mavg'].shift(periods=(-50))
 
 tar_data['signal'][short_window:] = np.where(tar_data['short_mavg'][short_window:] > tar_data['long_mavg'][short_window:], 1.0, 0.0)
 
+print(len(tar_data['B_Close']))
 
 
-
-TRAIN_SPLIT = 4000
+TRAIN_SPLIT = 2000
 
 
 df = tar_data
@@ -80,6 +80,7 @@ features.index = df.index
 features.plot(subplots=True)
 plt.show()
 dataset = features.values
+print(len(dataset))
 # data_mean = dataset[:TRAIN_SPLIT].mean(axis=0)
 # data_std = dataset[:TRAIN_SPLIT].std(axis=0)
 # dataset = (dataset-data_mean)/data_std
@@ -226,7 +227,7 @@ plot_train_history(multi_step_history, 'Multi-Step Training and validation loss'
 
 #Save model
 
-model.save('saved_model/test_multi1-0_model')
+model.save('saved_model/TSCO.L_multi1-0_model')
 
 for alpha in range(0,1000,250):
     pred = model.predict(x_val_multi)[alpha]

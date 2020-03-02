@@ -239,7 +239,7 @@ for alpha in range(0,3000,30):
     predicted_returns(x_val_multi[alpha],y_val_multi[alpha],pred)
     multi_step_plot(x_val_multi[alpha],y_val_multi[alpha],pred)
 plt.figure()
-plt.title('Barclays RNN prediction (end prediction higher or lower)')
+plt.title('Vodafone RNN prediction (end prediction higher or lower)')
 plt.xlabel('Trades')
 plt.ylabel('% of start price - returns ')
 plt.plot(plot_returns)

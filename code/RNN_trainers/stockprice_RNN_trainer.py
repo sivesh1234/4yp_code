@@ -16,7 +16,7 @@ import yfinance
 mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
-share_data = pdr.get_data_yahoo('BARC.L',
+share_data = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
@@ -204,7 +204,7 @@ plot_train_history(multi_step_history, 'Multi-Step Training and validation loss'
 
 #Save model
 
-model.save('saved_model/BARC_model')
+model.save('saved_model/vod_model')
 
 for alpha in range(0,1000,250):
     pred = model.predict(x_val_multi)[alpha]
