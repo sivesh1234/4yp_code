@@ -97,7 +97,6 @@ tar_data['C_signal'][short_window:] = np.where(tar_data['C_short_mavg'][short_wi
 
 TRAIN_SPLIT = 1500
 
-
 df = tar_data
 
 A_features_considered = ['A_signal','A_Close','B_Close','C_Close']
@@ -201,7 +200,7 @@ def create_time_steps(length):
 
 
 ####PLOTTING THE TESTING ENVIORNMENT
-plot_range = range(1500,(1500+3030))
+plot_range = range(TRAIN_SPLIT,(TRAIN_SPLIT+3030))
 
 A_plot_data = A_dataset[plot_range]
 A_plot_data = A_plot_data[:,1]
@@ -335,7 +334,7 @@ def multi_step_plot(history, true_future, prediction,signal=0,returns=0,trade=0)
   start = history[89][0]
   start_pred = prediction[0]
   difference = start - start_pred
-  prediction = prediction + difference
+  # prediction = prediction + difference
   plt.plot(num_in, np.array(history[:,0]), label='History')
   plt.plot(np.arange(num_out)/STEP, np.array(true_future[:,0]), 'bo',
            label='True Future')
@@ -408,7 +407,7 @@ for alpha in range(0,3000,30):
     trade = int(alpha/30)
     print("-"*500)
     print("period {}".format(alpha/30))
-    start_markovitz_index = 1500 + alpha - 1110 ###CHANGE THE LAST NUMBER
+    start_markovitz_index = 1500 + alpha - 1210 ###CHANGE THE LAST NUMBER
     end_markovitz_index = 1500 + alpha + 90 ###FIXED
 
     new_indices = range(start_markovitz_index,end_markovitz_index)

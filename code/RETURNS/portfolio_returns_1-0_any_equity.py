@@ -27,9 +27,9 @@ mpl.rcParams['axes.grid'] = False
 #Getting data
 
 #BT, VOD AND TEF is order for working
-stock1 = 'LLOY.L'
-stock2 = 'TEF.MC'
-stock3 = 'TSCO.L'
+stock1 = 'BARC.L'
+stock2 = 'LLOY.L'
+stock3 = 'RBS.L'
 tar_data = pdr.get_data_yahoo(stock1,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
@@ -95,7 +95,7 @@ tar_data['C_signal'][short_window:] = np.where(tar_data['C_short_mavg'][short_wi
 
 
 
-TRAIN_SPLIT = 1500
+TRAIN_SPLIT = 2500
 
 
 df = tar_data
@@ -201,7 +201,7 @@ def create_time_steps(length):
 
 
 ####PLOTTING THE TESTING ENVIORNMENT
-plot_range = range(1500,(1500+3030))
+plot_range = range(TRAIN_SPLIT,(TRAIN_SPLIT+3030))
 
 A_plot_data = A_dataset[plot_range]
 A_plot_data = A_plot_data[:,1]
@@ -282,7 +282,7 @@ def predicted_weighted_returns(history, true_future, prediction ,weight,open_pri
 
   start_pred = prediction[0]
   difference = start_10 - start_pred
-  prediction = prediction + difference
+  # prediction = prediction + difference
   prediction_average = np.mean(prediction)
   predicted_end = prediction[29]
 
@@ -292,10 +292,10 @@ def predicted_weighted_returns(history, true_future, prediction ,weight,open_pri
 
   #This sets the signal to the best option
   print("predicted_average {}".format(prediction_average))
-  if prediction_average > 0.98:
+  if prediction_average > 0.8:
       signal = 1
       print("long")
-  elif prediction_average < 0.02:
+  elif prediction_average < 0.2:
       signal = -1
       print("short")
   else:
@@ -398,9 +398,9 @@ def multi_step_plot(history, true_future, prediction,signal=0,returns=0,trade=0)
 
 
 
-A_model = tf.keras.models.load_model('saved_model/LLOY.L_multi1-0_model')
-B_model = tf.keras.models.load_model('saved_model/TEF.MC_multi1-0_model')
-C_model = tf.keras.models.load_model('saved_model/TSCO.L_multi1-0_model')
+A_model = tf.keras.models.load_model('saved_model/{}_multi1-0_model'.format(stock1))
+B_model = tf.keras.models.load_model('saved_model/{}_multi1-0_model'.format(stock2))
+C_model = tf.keras.models.load_model('saved_model/{}_multi1-0_model'.format(stock3))
 
 
 
@@ -441,15 +441,15 @@ for alpha in range(0,3000,30):
     weight_allocation = calculate_weights(table)
     print("weight allocation is {}".format(weight_allocation))
 
-    weight_A = (weight_allocation[0]/100)
-
-    weight_B = (weight_allocation[1]/100)
-
-    weight_C = (weight_allocation[2]/100)
+    # weight_A = (weight_allocation[0]/100)
+    #
+    # weight_B = (weight_allocation[1]/100)
+    #
+    # weight_C = (weight_allocation[2]/100)
     weights_array.append(weight_allocation)
-    # weight_A = 1/3
-    # weight_B = 1/3
-    # weight_C = 1/3
+    weight_A = 1/3
+    weight_B = 1/3
+    weight_C = 1/3
 
     print("-"*80)
     print("trade1")
@@ -472,9 +472,9 @@ for alpha in range(0,3000,30):
     print("final returns is {}".format(total_returns))
 
 
-save('a2_predictions.npy',A_predictions)
-save('b2_predictions.npy',B_predictions)
-save('c2_predictions.npy',C_predictions)
+save('barc_fin_predictions.npy',A_predictions)
+save('lloy_fin_predictions.npy',B_predictions)
+save('rbs_fin_predictions.npy',C_predictions)
 
 plt.title("Weightings {} {} {}".format(stock1,stock2,stock3))
 plt.plot(weights_array)

@@ -1,10 +1,10 @@
 import scipy.stats as st
 #Input random monte carlo features
 
-monte_mean = 0.374
-monte_std = 75
+monte_mean = 2.33
+monte_std = 80.16
 #Input Returns
-returns = 145
+returns = 200
 
 #Proability test
 z_number = (returns-monte_mean)/monte_std

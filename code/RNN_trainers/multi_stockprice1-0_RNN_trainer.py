@@ -16,14 +16,18 @@ import yfinance
 mpl.rcParams['figure.figsize'] = (8, 6)
 mpl.rcParams['axes.grid'] = False
 #Getting data
-tar_data = pdr.get_data_yahoo('TSCO.L',
+
+stock1 = 'RBS.L'
+stock2 = 'BARC.L'
+stock3 = 'LLOY.L'
+tar_data = pdr.get_data_yahoo(stock1,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
 
-B_data = pdr.get_data_yahoo('LLOY.L',
+B_data = pdr.get_data_yahoo(stock2,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-C_data = pdr.get_data_yahoo('TEF.MC',
+C_data = pdr.get_data_yahoo(stock3,
                           start=datetime.datetime(1990, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
 
@@ -66,10 +70,10 @@ tar_data['long_mavg'] = tar_data['long_mavg'].shift(periods=(-50))
 
 tar_data['signal'][short_window:] = np.where(tar_data['short_mavg'][short_window:] > tar_data['long_mavg'][short_window:], 1.0, 0.0)
 
-print(len(tar_data['B_Close']))
+print("LENGTH OF DATA SET IS {}".format(len(tar_data['B_Close'])))
 
 
-TRAIN_SPLIT = 2000
+TRAIN_SPLIT = 3000
 
 
 df = tar_data
@@ -175,7 +179,7 @@ def multi_step_plot(history, true_future, prediction):
   start_10 = history[89][0]
   start_pred = prediction[0]
   difference = start_10 - start_pred
-  prediction = prediction + difference
+  # prediction = prediction + difference
   plt.plot(num_in, np.array(history[:, 0]), label='History')
   plt.plot(np.arange(num_out)/STEP, np.array(true_future), 'bo',
            label='True Future')
@@ -203,7 +207,7 @@ model.add(tf.keras.layers.LSTM(64,return_sequences=True,input_shape=x_train_mult
 model.add(tf.keras.layers.LSTM(64, activation='relu'))
 model.add(tf.keras.layers.Dense(30))  #Output has 10 as parameter as making 10 predictions
 #Compile model
-model.summary()
+print(model.summary())
 
 #RMSprop optimizer divides the gradient by a running average of its recent magnitude
 #mae is mean absolute error
@@ -227,7 +231,7 @@ plot_train_history(multi_step_history, 'Multi-Step Training and validation loss'
 
 #Save model
 
-model.save('saved_model/TSCO.L_multi1-0_model')
+model.save('saved_model/{}_multi1-0_model'.format(stock1))
 
 for alpha in range(0,1000,250):
     pred = model.predict(x_val_multi)[alpha]

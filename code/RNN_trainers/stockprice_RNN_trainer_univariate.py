@@ -38,7 +38,10 @@ long_window = 101
 
 
 
-
+print("start training date {}".format(vod.iloc[[0]].index))
+print("End training date {}".format(vod.iloc[[4000]].index))
+print("start testing date {}".format(vod.iloc[[4001]].index))
+print("end testing date {}".format(vod.iloc[[7031]].index))
 TRAIN_SPLIT = 4000
 
 

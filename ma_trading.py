@@ -29,8 +29,8 @@ signals['short_mavg'] = vod['Close'].rolling(window=short_window,
 
 signals['long_mavg'] = vod['Close'].rolling(window=long_window,min_periods=1,center=False).mean()
 signals['Close Price'] = vod['Close']
-# signals['short_mavg'] = signals['short_mavg'].shift(periods=(-50))
-# signals['long_mavg'] = signals['long_mavg'].shift(periods=(-50))
+signals['short_mavg'] = signals['short_mavg'].shift(periods=(-50))
+signals['long_mavg'] = signals['long_mavg'].shift(periods=(-50))
 
 #if short > long then 'signal' = 1
 #unsure what short_window does here***************

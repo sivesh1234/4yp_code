@@ -332,7 +332,7 @@ for alpha in range(0,3000,30):
     global plot_returns
     global multiple_returns
     signal,returns, prediction_average = predicted_returns(x_val_multi[alpha],y_val_all[alpha],pred)
-    # multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred,signal,returns,trade)
+    multi_step_plot(x_val_multi[alpha],y_val_all[alpha],pred,signal,returns,trade)
     prediction_array.append(prediction_average)
 
 
