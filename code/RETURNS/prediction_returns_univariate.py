@@ -19,7 +19,8 @@ mpl.rcParams['axes.grid'] = False
 vod = pdr.get_data_yahoo('VOD',
                           start=datetime.datetime(2000, 10, 26),
                           end=datetime.datetime(2019, 10, 26)) #year, month, date
-
+print("start date {}".format(vod.iloc[[1501]].index))
+print("end date {}".format(vod.iloc[[4501]].index))
 short_window = 41
 long_window = 101
 
@@ -49,6 +50,7 @@ features = df[features_considered]
 features.index = df.index
 # features.plot(subplots=True)
 # features.plot()
+
 dataset = features.values
 print(len(dataset))
 

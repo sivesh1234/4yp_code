@@ -19,6 +19,8 @@ vod = pdr.get_data_yahoo('VOD',
 
 vod = vod.tail(3300)
 print(vod.tail())
+print("start date {}".format(vod.iloc[[0]].index))
+print("End date {}".format(vod.iloc[[3299]].index))
 short_window = 41
 long_window = 101
 

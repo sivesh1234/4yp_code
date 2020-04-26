@@ -11,8 +11,6 @@ import shutil
 from pandas_datareader import data as pdr
 import datetime
 
-
-
 aapl = pdr.get_data_yahoo('NGG',
                           start=datetime.datetime(2007, 10, 26),
                           end=datetime.datetime(2019, 10, 26))
