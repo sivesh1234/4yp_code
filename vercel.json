@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "/api/run_python_script.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/run_python_script.py",
+      "dest": "/api/run_python_script.py"
+    }
+  ],
+  "env": {
+    "PYTHON_SCRIPT_NAME": "run_python_script.py"
+  }
+}
